@@ -54,13 +54,11 @@ func (c *ConfigBuilder) fillDefault(configs []contracts.Config) []contracts.Full
 	}
 
 	var fullConfigs []contracts.FullConfig
-	driver := c.config.GetString(fmt.Sprintf("database.connections.%s.driver", c.connection))
-
 	for _, config := range configs {
 		fullConfig := contracts.FullConfig{
 			Config:      config,
 			Connection:  c.connection,
-			Driver:      driver,
+			Driver:      DriverName,
 			Prefix:      c.config.GetString(fmt.Sprintf("database.connections.%s.prefix", c.connection)),
 			Singular:    c.config.GetBool(fmt.Sprintf("database.connections.%s.singular", c.connection)),
 			NoLowerCase: c.config.GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", c.connection)),

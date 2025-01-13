@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm/schema"
 	"gorm.io/plugin/dbresolver"
 
+	"github.com/goravel/framework/contracts/config"
 	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/database/orm"
 	"github.com/goravel/framework/contracts/log"
@@ -26,9 +27,9 @@ type Postgres struct {
 	log           log.Log
 }
 
-func NewPostgres(configBuilder *ConfigBuilder, log log.Log) *Postgres {
+func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
 	return &Postgres{
-		configBuilder: configBuilder,
+		configBuilder: NewConfigBuilder(config, connection),
 		log:           log,
 	}
 }

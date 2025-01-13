@@ -18,7 +18,7 @@ func (receiver *ServiceProvider) Register(app foundation.Application) {
 	App = app
 
 	app.BindWith(Binding, func(app foundation.Application, parameters map[string]any) (any, error) {
-		return NewPostgres(NewConfigBuilder(app.MakeConfig(), parameters["connection"].(string)), app.MakeLog()), nil
+		return NewPostgres(app.MakeConfig(), app.MakeLog(), parameters["connection"].(string)), nil
 	})
 }
 
