@@ -86,15 +86,15 @@ func (r *Docker) Database(name string) (testing.DatabaseDriver, error) {
 		}
 	}()
 
-	postgresImpl := NewDocker(name, r.username, r.password)
-	postgresImpl.containerID = r.containerID
-	postgresImpl.port = r.port
+	docker := NewDocker(name, r.username, r.password)
+	docker.containerID = r.containerID
+	docker.port = r.port
 
-	return postgresImpl, nil
+	return docker, nil
 }
 
 func (r *Docker) Driver() database.Driver {
-	return database.DriverPostgres
+	return database.Driver(DriverName)
 }
 
 func (r *Docker) Fresh() error {
@@ -125,6 +125,13 @@ func (r *Docker) Ready() error {
 	}
 
 	return r.close(gormDB)
+}
+
+func (r *Docker) Reuse(containerID string, port int) error {
+	r.containerID = containerID
+	r.port = port
+
+	return r.Ready()
 }
 
 func (r *Docker) Shutdown() error {
