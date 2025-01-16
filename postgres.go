@@ -29,13 +29,13 @@ func NewPostgres(config config.Config, log log.Log, orm orm.Orm, connection stri
 	}
 }
 
-func (r *Postgres) Config() database.Config1 {
+func (r *Postgres) Config() database.Config {
 	writers := r.config.Writes()
 	if len(writers) == 0 {
-		return database.Config1{}
+		return database.Config{}
 	}
 
-	return database.Config1{
+	return database.Config{
 		Connection: r.config.Connection(),
 		Driver:     DriverName,
 		Prefix:     writers[0].Prefix,

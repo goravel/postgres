@@ -7,7 +7,6 @@ import (
 	"gorm.io/driver/postgres"
 	gormio "gorm.io/gorm"
 
-	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/support/color"
 )
@@ -93,8 +92,8 @@ func (r *Docker) Database(name string) (testing.DatabaseDriver, error) {
 	return docker, nil
 }
 
-func (r *Docker) Driver() database.Driver {
-	return database.Driver(DriverName)
+func (r *Docker) Driver() string {
+	return DriverName
 }
 
 func (r *Docker) Fresh() error {
