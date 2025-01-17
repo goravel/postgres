@@ -1,8 +1,6 @@
 package postgres
 
 import (
-	"gorm.io/gorm"
-
 	"github.com/goravel/framework/contracts/config"
 	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/database/driver"
@@ -11,6 +9,7 @@ import (
 	"github.com/goravel/framework/contracts/log"
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/errors"
+	"gorm.io/gorm"
 )
 
 var _ driver.Driver = &Postgres{}
@@ -21,11 +20,10 @@ type Postgres struct {
 	orm    orm.Orm
 }
 
-func NewPostgres(config config.Config, log log.Log, orm orm.Orm, connection string) *Postgres {
+func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
 	return &Postgres{
 		config: NewConfigBuilder(config, connection),
 		log:    log,
-		orm:    orm,
 	}
 }
 
@@ -37,7 +35,7 @@ func (r *Postgres) Config() database.Config {
 
 	return database.Config{
 		Connection: r.config.Connection(),
-		Driver:     DriverName,
+		Driver:     Name,
 		Prefix:     writers[0].Prefix,
 		Schema:     writers[0].Schema,
 	}
@@ -64,6 +62,6 @@ func (r *Postgres) Processor() contractsschema.Processor {
 	return NewProcessor()
 }
 
-func (r *Postgres) Schema() contractsschema.DriverSchema {
-	return NewSchema(r.Grammar().(*Grammar), r.orm, r.config.Writes()[0].Schema, r.config.Writes()[0].Prefix)
+func (r *Postgres) Schema(orm orm.Orm) contractsschema.DriverSchema {
+	return NewSchema(r.Grammar().(*Grammar), orm, r.config.Writes()[0].Schema, r.config.Writes()[0].Prefix)
 }

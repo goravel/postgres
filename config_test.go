@@ -20,7 +20,7 @@ type ConfigTestSuite struct {
 
 func TestConfigTestSuite(t *testing.T) {
 	suite.Run(t, &ConfigTestSuite{
-		connection: "mysql",
+		connection: "postgres",
 	})
 }
 
@@ -35,11 +35,11 @@ func (s *ConfigTestSuite) TestReads() {
 	singular := false
 
 	// Test when configs is empty
-	s.mockConfig.EXPECT().Get("database.connections.mysql.read").Return(nil).Once()
+	s.mockConfig.EXPECT().Get("database.connections.postgres.read").Return(nil).Once()
 	s.Nil(s.config.Reads())
 
 	// Test when configs is not empty
-	s.mockConfig.EXPECT().Get("database.connections.mysql.read").Return([]contracts.Config{
+	s.mockConfig.EXPECT().Get("database.connections.postgres.read").Return([]contracts.Config{
 		{
 			Database: database,
 		},
@@ -68,7 +68,7 @@ func (s *ConfigTestSuite) TestWrites() {
 	singular := false
 
 	// Test when configBuilder is empty
-	s.mockConfig.EXPECT().Get("database.connections.mysql.write").Return(nil).Once()
+	s.mockConfig.EXPECT().Get("database.connections.postgres.write").Return(nil).Once()
 	s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.driver", s.connection)).Return("postgres").Once()
 	s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.database", s.connection)).Return(database).Once()
 	s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.prefix", s.connection)).Return(prefix).Once()
@@ -88,7 +88,7 @@ func (s *ConfigTestSuite) TestWrites() {
 	}, s.config.Writes())
 
 	// Test when configBuilder is not empty
-	s.mockConfig.EXPECT().Get("database.connections.mysql.write").Return([]contracts.Config{
+	s.mockConfig.EXPECT().Get("database.connections.postgres.write").Return([]contracts.Config{
 		{
 			Database: database,
 		},

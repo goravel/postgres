@@ -3,10 +3,9 @@ package postgres
 import (
 	"strings"
 
-	"github.com/spf13/cast"
-
 	"github.com/goravel/framework/contracts/database/schema"
 	"github.com/goravel/framework/support/str"
+	"github.com/spf13/cast"
 )
 
 var _ schema.Processor = &Processor{}

@@ -93,7 +93,7 @@ func (r *Docker) Database(name string) (testing.DatabaseDriver, error) {
 }
 
 func (r *Docker) Driver() string {
-	return DriverName
+	return Name
 }
 
 func (r *Docker) Fresh() error {

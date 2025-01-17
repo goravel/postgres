@@ -58,7 +58,7 @@ func (c *ConfigBuilder) fillDefault(configs []contracts.Config) []contracts.Full
 		fullConfig := contracts.FullConfig{
 			Config:      config,
 			Connection:  c.connection,
-			Driver:      DriverName,
+			Driver:      Name,
 			Prefix:      c.config.GetString(fmt.Sprintf("database.connections.%s.prefix", c.connection)),
 			Singular:    c.config.GetBool(fmt.Sprintf("database.connections.%s.singular", c.connection)),
 			NoLowerCase: c.config.GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", c.connection)),
