@@ -2,11 +2,12 @@ package postgres
 
 import (
 	"github.com/goravel/framework/contracts/foundation"
+	"github.com/goravel/framework/errors"
 )
 
 const (
-	Binding    = "goravel.postgres"
-	DriverName = "postgres"
+	Binding = "goravel.postgres"
+	Name    = "postgres"
 )
 
 var App foundation.Application
@@ -18,7 +19,17 @@ func (receiver *ServiceProvider) Register(app foundation.Application) {
 	App = app
 
 	app.BindWith(Binding, func(app foundation.Application, parameters map[string]any) (any, error) {
-		return NewPostgres(NewConfigBuilder(app.MakeConfig(), parameters["connection"].(string)), app.MakeLog()), nil
+		config := app.MakeConfig()
+		if config == nil {
+			return nil, errors.ConfigFacadeNotSet.SetModule(Name)
+		}
+
+		log := app.MakeLog()
+		if log == nil {
+			return nil, errors.LogFacadeNotSet.SetModule(Name)
+		}
+
+		return NewPostgres(config, log, parameters["connection"].(string)), nil
 	})
 }
 

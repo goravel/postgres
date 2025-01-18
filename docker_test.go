@@ -3,12 +3,10 @@ package postgres
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
-	"github.com/goravel/framework/contracts/database"
 	contractstesting "github.com/goravel/framework/contracts/testing"
 	configmocks "github.com/goravel/framework/mocks/config"
 	"github.com/goravel/framework/support/env"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
@@ -82,10 +80,6 @@ func (s *PostgresTestSuite) TestBuild() {
 	s.NotNil(databaseDriver)
 
 	s.Nil(s.postgres.Shutdown())
-}
-
-func (s *PostgresTestSuite) TestDriver() {
-	s.Equal(database.DriverPostgres, s.postgres.Driver())
 }
 
 func (s *PostgresTestSuite) TestImage() {

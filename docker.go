@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"gorm.io/driver/postgres"
-	gormio "gorm.io/gorm"
-
-	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/support/color"
+	"gorm.io/driver/postgres"
+	gormio "gorm.io/gorm"
 )
 
 type Docker struct {
@@ -86,15 +84,15 @@ func (r *Docker) Database(name string) (testing.DatabaseDriver, error) {
 		}
 	}()
 
-	postgresImpl := NewDocker(name, r.username, r.password)
-	postgresImpl.containerID = r.containerID
-	postgresImpl.port = r.port
+	docker := NewDocker(name, r.username, r.password)
+	docker.containerID = r.containerID
+	docker.port = r.port
 
-	return postgresImpl, nil
+	return docker, nil
 }
 
-func (r *Docker) Driver() database.Driver {
-	return database.DriverPostgres
+func (r *Docker) Driver() string {
+	return Name
 }
 
 func (r *Docker) Fresh() error {
@@ -125,6 +123,13 @@ func (r *Docker) Ready() error {
 	}
 
 	return r.close(gormDB)
+}
+
+func (r *Docker) Reuse(containerID string, port int) error {
+	r.containerID = containerID
+	r.port = port
+
+	return r.Ready()
 }
 
 func (r *Docker) Shutdown() error {

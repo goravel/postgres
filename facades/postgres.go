@@ -3,12 +3,12 @@ package facades
 import (
 	"log"
 
-	"github.com/goravel/framework/contracts/database/orm"
+	"github.com/goravel/framework/contracts/database/driver"
 
 	"github.com/goravel/postgres"
 )
 
-func Postgres(connection string) orm.Driver {
+func Postgres(connection string) driver.Driver {
 	if postgres.App == nil {
 		log.Fatalln("please register postgres service provider")
 		return nil
