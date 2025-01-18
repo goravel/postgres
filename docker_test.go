@@ -3,11 +3,10 @@ package postgres
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
-
 	contractstesting "github.com/goravel/framework/contracts/testing"
 	configmocks "github.com/goravel/framework/mocks/config"
 	"github.com/goravel/framework/support/env"
+	"github.com/stretchr/testify/suite"
 )
 
 const (

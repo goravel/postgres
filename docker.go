@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"gorm.io/driver/postgres"
-	gormio "gorm.io/gorm"
-
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/support/color"
+	"gorm.io/driver/postgres"
+	gormio "gorm.io/gorm"
 )
 
 type Docker struct {
