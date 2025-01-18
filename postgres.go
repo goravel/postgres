@@ -17,7 +17,6 @@ var _ driver.Driver = &Postgres{}
 type Postgres struct {
 	config *ConfigBuilder
 	log    log.Log
-	orm    orm.Orm
 }
 
 func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
