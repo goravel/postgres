@@ -3,25 +3,24 @@ package postgres
 import (
 	"fmt"
 
-	contractsconfig "github.com/goravel/framework/contracts/config"
-	"github.com/goravel/framework/contracts/database"
+	"github.com/goravel/framework/contracts/config"
 
 	"github.com/goravel/postgres/contracts"
 )
 
 type ConfigBuilder struct {
-	config     contractsconfig.Config
+	config     config.Config
 	connection string
 }
 
-func NewConfigBuilder(config contractsconfig.Config, connection string) *ConfigBuilder {
+func NewConfigBuilder(config config.Config, connection string) *ConfigBuilder {
 	return &ConfigBuilder{
 		config:     config,
 		connection: connection,
 	}
 }
 
-func (c *ConfigBuilder) Config() contractsconfig.Config {
+func (c *ConfigBuilder) Config() config.Config {
 	return c.config
 }
 
@@ -59,17 +58,19 @@ func (c *ConfigBuilder) fillDefault(configs []contracts.Config) []contracts.Full
 			Config:      config,
 			Connection:  c.connection,
 			Driver:      Name,
+			NoLowerCase: c.config.GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", c.connection)),
 			Prefix:      c.config.GetString(fmt.Sprintf("database.connections.%s.prefix", c.connection)),
 			Singular:    c.config.GetBool(fmt.Sprintf("database.connections.%s.singular", c.connection)),
-			NoLowerCase: c.config.GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", c.connection)),
 			Sslmode:     c.config.GetString(fmt.Sprintf("database.connections.%s.sslmode", c.connection)),
 			Timezone:    c.config.GetString(fmt.Sprintf("database.connections.%s.timezone", c.connection)),
 		}
 		if nameReplacer := c.config.Get(fmt.Sprintf("database.connections.%s.name_replacer", c.connection)); nameReplacer != nil {
-			if replacer, ok := nameReplacer.(database.Replacer); ok {
+			if replacer, ok := nameReplacer.(contracts.Replacer); ok {
 				fullConfig.NameReplacer = replacer
 			}
 		}
+
+		// If read or write is empty, use the default config
 		if fullConfig.Dsn == "" {
 			fullConfig.Dsn = c.config.GetString(fmt.Sprintf("database.connections.%s.dsn", c.connection))
 		}
@@ -88,7 +89,7 @@ func (c *ConfigBuilder) fillDefault(configs []contracts.Config) []contracts.Full
 		if fullConfig.Schema == "" {
 			fullConfig.Schema = c.config.GetString(fmt.Sprintf("database.connections.%s.schema", c.connection), "public")
 		}
-		if config.Database == "" {
+		if fullConfig.Database == "" {
 			fullConfig.Database = c.config.GetString(fmt.Sprintf("database.connections.%s.database", c.connection))
 		}
 		fullConfigs = append(fullConfigs, fullConfig)

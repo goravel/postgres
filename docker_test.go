@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/goravel/framework/contracts/database"
 	contractstesting "github.com/goravel/framework/contracts/testing"
 	configmocks "github.com/goravel/framework/mocks/config"
 	"github.com/goravel/framework/support/env"
@@ -82,10 +81,6 @@ func (s *PostgresTestSuite) TestBuild() {
 	s.NotNil(databaseDriver)
 
 	s.Nil(s.postgres.Shutdown())
-}
-
-func (s *PostgresTestSuite) TestDriver() {
-	s.Equal(database.DriverPostgres, s.postgres.Driver())
 }
 
 func (s *PostgresTestSuite) TestImage() {

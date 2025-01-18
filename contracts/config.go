@@ -33,10 +33,8 @@ type FullConfig struct {
 	Connection   string
 	Prefix       string
 	Singular     bool
-	Charset      string // Mysql, Sqlserver
-	Loc          string // Mysql
-	Sslmode      string // Postgres
-	Timezone     string // Postgres
+	Sslmode      string
+	Timezone     string
 	NoLowerCase  bool
 	NameReplacer Replacer
 }

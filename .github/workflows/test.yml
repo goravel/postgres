@@ -5,14 +5,7 @@ on:
       - master
   pull_request:
 jobs:
-  ubuntu:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version: 'stable'
-      - name: Install dependencies
-        run: go mod tidy
-      - name: Run tests
-        run: go test -timeout 1h ./...
+  test:
+    uses: goravel/.github/.github/workflows/test.yml@master
+    secrets: inherit
+    

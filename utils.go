@@ -20,22 +20,6 @@ import (
 
 type Expression string
 
-// Used by TestContainer, to simulate the port is using.
-var testPortUsing = false
-
-func isPortUsing(port int) bool {
-	if testPortUsing {
-		return true
-	}
-
-	l, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
-	if l != nil {
-		l.Close()
-	}
-
-	return err != nil
-}
-
 func getDefaultValue(def any) string {
 	switch value := def.(type) {
 	case bool:

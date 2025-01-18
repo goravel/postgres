@@ -82,9 +82,4 @@ func (s *WrapTestSuite) TestValue() {
 	// Without asterisk
 	result = s.wrap.Value("value")
 	s.Equal(`"value"`, result)
-
-	// With mysql
-	s.wrap.driver = database.DriverMysql
-	result = s.wrap.Value("value")
-	s.Equal("`value`", result)
 }
