@@ -4,18 +4,15 @@ import (
 	"fmt"
 	"strings"
 
-	contractsdatabase "github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/support/collect"
 )
 
 type Wrap struct {
-	driver      contractsdatabase.Driver
 	tablePrefix string
 }
 
-func NewWrap(driver contractsdatabase.Driver, tablePrefix string) *Wrap {
+func NewWrap(tablePrefix string) *Wrap {
 	return &Wrap{
-		driver:      driver,
 		tablePrefix: tablePrefix,
 	}
 }
@@ -63,9 +60,6 @@ func (r *Wrap) Quote(value string) string {
 
 func (r *Wrap) Quotes(value []string) []string {
 	return collect.Map(value, func(v string, _ int) string {
-		if r.driver == contractsdatabase.DriverSqlserver {
-			return "N" + r.Quote(v)
-		}
 		return r.Quote(v)
 	})
 }

@@ -49,8 +49,13 @@ func (r *Postgres) Docker() (testing.DatabaseDriver, error) {
 	return NewDocker(writers[0].Database, writers[0].Username, writers[0].Password), nil
 }
 
-func (r *Postgres) Gorm() (*gorm.DB, error) {
-	return NewGorm(r.config, r.log).Build()
+func (r *Postgres) Gorm() (*gorm.DB, driver.GormQuery, error) {
+	db, err := NewGorm(r.config, r.log).Build()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return db, NewQuery(), nil
 }
 
 func (r *Postgres) Grammar() contractsschema.Grammar {
