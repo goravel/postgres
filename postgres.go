@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"fmt"
+
 	"github.com/goravel/framework/contracts/config"
 	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/database/driver"
@@ -33,10 +35,16 @@ func (r *Postgres) Config() database.Config {
 	}
 
 	return database.Config{
-		Connection: r.config.Connection(),
+		Connection: writers[0].Connection,
+		Database:   writers[0].Database,
 		Driver:     Name,
+		Host:       writers[0].Host,
+		Password:   writers[0].Password,
+		Port:       writers[0].Port,
 		Prefix:     writers[0].Prefix,
 		Schema:     writers[0].Schema,
+		Username:   writers[0].Username,
+		Version:    r.version(),
 	}
 }
 
@@ -68,4 +76,20 @@ func (r *Postgres) Processor() contractsschema.Processor {
 
 func (r *Postgres) Schema(orm orm.Orm) contractsschema.DriverSchema {
 	return NewSchema(r.Grammar().(*Grammar), orm, r.config.Writes()[0].Schema, r.config.Writes()[0].Prefix)
+}
+
+func (r *Postgres) version() string {
+	db, _, err := r.Gorm()
+	if err != nil {
+		return ""
+	}
+
+	var version struct {
+		Value string
+	}
+	if err := db.Raw("SELECT current_setting('server_version') AS value;").Scan(&version).Error; err != nil {
+		return fmt.Sprintf("UNKNOWN: %s", err)
+	}
+
+	return version.Value
 }
