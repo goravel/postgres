@@ -6,11 +6,11 @@ import (
 	"github.com/goravel/framework/contracts/config"
 	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/database/driver"
-	"github.com/goravel/framework/contracts/database/orm"
 	contractsschema "github.com/goravel/framework/contracts/database/schema"
 	"github.com/goravel/framework/contracts/log"
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/errors"
+	"github.com/goravel/postgres/contracts"
 	"gorm.io/gorm"
 )
 
@@ -18,7 +18,7 @@ var _ driver.Driver = &Postgres{}
 
 type Postgres struct {
 	configFacade config.Config
-	config       *Config
+	config       contracts.ConfigBuilder
 	log          log.Log
 }
 
@@ -74,10 +74,6 @@ func (r *Postgres) Grammar() contractsschema.Grammar {
 
 func (r *Postgres) Processor() contractsschema.Processor {
 	return NewProcessor()
-}
-
-func (r *Postgres) Schema(orm orm.Orm) contractsschema.DriverSchema {
-	return NewSchema(r.Grammar().(*Grammar), orm, r.config.Writes()[0].Schema, r.config.Writes()[0].Prefix)
 }
 
 func (r *Postgres) version() string {

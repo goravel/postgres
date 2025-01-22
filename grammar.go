@@ -17,15 +17,17 @@ var _ contractsschema.Grammar = &Grammar{}
 type Grammar struct {
 	attributeCommands []string
 	modifiers         []func(contractsschema.Blueprint, contractsschema.ColumnDefinition) string
+	prefix            string
 	serials           []string
 	wrap              *Wrap
 }
 
-func NewGrammar(tablePrefix string) *Grammar {
+func NewGrammar(prefix string) *Grammar {
 	postgres := &Grammar{
 		attributeCommands: []string{schema.CommandComment},
+		prefix:            prefix,
 		serials:           []string{"bigInteger", "integer", "mediumInteger", "smallInteger", "tinyInteger"},
-		wrap:              NewWrap(tablePrefix),
+		wrap:              NewWrap(prefix),
 	}
 	postgres.modifiers = []func(contractsschema.Blueprint, contractsschema.ColumnDefinition) string{
 		postgres.ModifyDefault,
@@ -53,7 +55,14 @@ func (r *Grammar) CompileChange(blueprint contractsschema.Blueprint, command *co
 	}
 }
 
-func (r *Grammar) CompileColumns(schema, table string) string {
+func (r *Grammar) CompileColumns(schema, table string) (string, error) {
+	schema, table, err := parseSchemaAndTable(table, schema)
+	if err != nil {
+		return "", err
+	}
+
+	table = r.prefix + table
+
 	return fmt.Sprintf(
 		"select a.attname as name, t.typname as type_name, format_type(a.atttypid, a.atttypmod) as type, "+
 			"(select tc.collcollate from pg_catalog.pg_collation tc where tc.oid = a.attcollation) as collation, "+
@@ -62,7 +71,7 @@ func (r *Grammar) CompileColumns(schema, table string) string {
 			"col_description(c.oid, a.attnum) as comment "+
 			"from pg_attribute a, pg_class c, pg_type t, pg_namespace n "+
 			"where c.relname = %s and n.nspname = %s and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid and n.oid = c.relnamespace "+
-			"order by a.attnum", r.wrap.Quote(table), r.wrap.Quote(schema))
+			"order by a.attnum", r.wrap.Quote(table), r.wrap.Quote(schema)), nil
 }
 
 func (r *Grammar) CompileComment(blueprint contractsschema.Blueprint, command *contractsschema.Command) string {
@@ -89,20 +98,60 @@ func (r *Grammar) CompileDrop(blueprint contractsschema.Blueprint) string {
 	return fmt.Sprintf("drop table %s", r.wrap.Table(blueprint.GetTableName()))
 }
 
-func (r *Grammar) CompileDropAllDomains(domains []string) string {
-	return fmt.Sprintf("drop domain %s cascade", strings.Join(r.EscapeNames(domains), ", "))
+func (r *Grammar) CompileDropAllTables(schema string, tables []contractsschema.Table) string {
+	excludedTables := r.EscapeNames([]string{"spatial_ref_sys"})
+	escapedSchema := r.EscapeNames([]string{schema})[0]
+
+	var dropTables []string
+	for _, table := range tables {
+		qualifiedName := fmt.Sprintf("%s.%s", table.Schema, table.Name)
+
+		isExcludedTable := slices.Contains(excludedTables, qualifiedName) || slices.Contains(excludedTables, table.Name)
+		isInCurrentSchema := escapedSchema == r.EscapeNames([]string{table.Schema})[0]
+
+		if !isExcludedTable && isInCurrentSchema {
+			dropTables = append(dropTables, qualifiedName)
+		}
+	}
+
+	if len(dropTables) == 0 {
+		return ""
+	}
+
+	return fmt.Sprintf("drop table %s cascade", strings.Join(r.EscapeNames(dropTables), ", "))
 }
 
-func (r *Grammar) CompileDropAllTables(tables []string) string {
-	return fmt.Sprintf("drop table %s cascade", strings.Join(r.EscapeNames(tables), ", "))
+func (r *Grammar) CompileDropAllTypes(schema string, types []contractsschema.Type) []string {
+	var dropTypes, dropDomains []string
+
+	for _, t := range types {
+		if !t.Implicit && schema == t.Schema {
+			if t.Type == "domain" {
+				dropDomains = append(dropDomains, fmt.Sprintf("%s.%s", t.Schema, t.Name))
+			} else {
+				dropTypes = append(dropTypes, fmt.Sprintf("%s.%s", t.Schema, t.Name))
+			}
+		}
+	}
+
+	return []string{
+		fmt.Sprintf("drop type %s cascade", strings.Join(r.EscapeNames(dropTypes), ", ")),
+		fmt.Sprintf("drop domain %s cascade", strings.Join(r.EscapeNames(dropDomains), ", ")),
+	}
 }
 
-func (r *Grammar) CompileDropAllTypes(types []string) string {
-	return fmt.Sprintf("drop type %s cascade", strings.Join(r.EscapeNames(types), ", "))
-}
+func (r *Grammar) CompileDropAllViews(schema string, views []contractsschema.View) string {
+	var dropViews []string
+	for _, view := range views {
+		if schema == view.Schema {
+			dropViews = append(dropViews, fmt.Sprintf("%s.%s", view.Schema, view.Name))
+		}
+	}
+	if len(dropViews) == 0 {
+		return ""
+	}
 
-func (r *Grammar) CompileDropAllViews(views []string) string {
-	return fmt.Sprintf("drop view %s cascade", strings.Join(r.EscapeNames(views), ", "))
+	return fmt.Sprintf("drop view %s cascade", strings.Join(r.EscapeNames(dropViews), ", "))
 }
 
 func (r *Grammar) CompileDropColumn(blueprint contractsschema.Blueprint, command *contractsschema.Command) []string {
@@ -209,7 +258,14 @@ func (r *Grammar) CompileIndex(blueprint contractsschema.Blueprint, command *con
 	)
 }
 
-func (r *Grammar) CompileIndexes(schema, table string) string {
+func (r *Grammar) CompileIndexes(schema, table string) (string, error) {
+	schema, table, err := parseSchemaAndTable(table, schema)
+	if err != nil {
+		return "", err
+	}
+
+	table = r.prefix + table
+
 	return fmt.Sprintf(
 		"select ic.relname as name, string_agg(a.attname, ',' order by indseq.ord) as columns, "+
 			"am.amname as \"type\", i.indisunique as \"unique\", i.indisprimary as \"primary\" "+
@@ -224,7 +280,7 @@ func (r *Grammar) CompileIndexes(schema, table string) string {
 			"group by ic.relname, am.amname, i.indisunique, i.indisprimary",
 		r.wrap.Quote(table),
 		r.wrap.Quote(schema),
-	)
+	), nil
 }
 
 func (r *Grammar) CompilePrimary(blueprint contractsschema.Blueprint, command *contractsschema.Command) string {

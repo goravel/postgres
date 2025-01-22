@@ -12,7 +12,7 @@ import (
 )
 
 type Docker struct {
-	config      *Config
+	config      contracts.ConfigBuilder
 	containerID string
 	database    string
 	host        string
@@ -22,7 +22,7 @@ type Docker struct {
 	port        int
 }
 
-func NewDocker(config *Config, database, username, password string) *Docker {
+func NewDocker(config contracts.ConfigBuilder, database, username, password string) *Docker {
 	return &Docker{
 		config:   config,
 		database: database,

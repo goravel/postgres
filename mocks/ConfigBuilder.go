@@ -69,6 +69,51 @@ func (_c *ConfigBuilder_Config_Call) RunAndReturn(run func() config.Config) *Con
 	return _c
 }
 
+// Connection provides a mock function with no fields
+func (_m *ConfigBuilder) Connection() string {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for Connection")
+	}
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// ConfigBuilder_Connection_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Connection'
+type ConfigBuilder_Connection_Call struct {
+	*mock.Call
+}
+
+// Connection is a helper method to define mock.On call
+func (_e *ConfigBuilder_Expecter) Connection() *ConfigBuilder_Connection_Call {
+	return &ConfigBuilder_Connection_Call{Call: _e.mock.On("Connection")}
+}
+
+func (_c *ConfigBuilder_Connection_Call) Run(run func()) *ConfigBuilder_Connection_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *ConfigBuilder_Connection_Call) Return(_a0 string) *ConfigBuilder_Connection_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *ConfigBuilder_Connection_Call) RunAndReturn(run func() string) *ConfigBuilder_Connection_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // Reads provides a mock function with no fields
 func (_m *ConfigBuilder) Reads() []contracts.FullConfig {
 	ret := _m.Called()

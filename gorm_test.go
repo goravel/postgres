@@ -53,7 +53,7 @@ func (s *GormTestSuite) TestBuild() {
 	}
 
 	s.Run("single config", func() {
-		docker := NewDocker(nil, "goravel", "goravel", "Framework!123")
+		docker := NewDocker(nil, writes[0].Database, writes[0].Username, writes[0].Password)
 		s.NoError(docker.Build())
 
 		writes[0].Config.Port = docker.port
@@ -90,7 +90,7 @@ func (s *GormTestSuite) TestBuild() {
 	})
 
 	s.Run("config with writes and reads", func() {
-		docker := NewDocker(nil, "goravel", "goravel", "Framework!123")
+		docker := NewDocker(nil, writes[0].Database, writes[0].Username, writes[0].Password)
 		s.NoError(docker.Build())
 
 		writes[0].Config.Port = docker.port
