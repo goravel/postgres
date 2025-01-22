@@ -17,14 +17,16 @@ import (
 var _ driver.Driver = &Postgres{}
 
 type Postgres struct {
-	config *ConfigBuilder
-	log    log.Log
+	configFacade config.Config
+	config       *Config
+	log          log.Log
 }
 
 func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
 	return &Postgres{
-		config: NewConfigBuilder(config, connection),
-		log:    log,
+		configFacade: config,
+		config:       NewConfig(config, connection),
+		log:          log,
 	}
 }
 
@@ -54,7 +56,7 @@ func (r *Postgres) Docker() (testing.DatabaseDriver, error) {
 		return nil, errors.OrmDatabaseConfigNotFound
 	}
 
-	return NewDocker(writers[0].Database, writers[0].Username, writers[0].Password), nil
+	return NewDocker(r.config, writers[0].Database, writers[0].Username, writers[0].Password), nil
 }
 
 func (r *Postgres) Gorm() (*gorm.DB, driver.GormQuery, error) {
