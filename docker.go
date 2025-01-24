@@ -6,6 +6,8 @@ import (
 
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/support/color"
+	"github.com/goravel/framework/support/docker"
+	"github.com/goravel/framework/support/process"
 	"github.com/goravel/postgres/contracts"
 	"gorm.io/driver/postgres"
 	gormio "gorm.io/gorm"
@@ -38,13 +40,14 @@ func NewDocker(config contracts.ConfigBuilder, database, username, password stri
 				"POSTGRES_DB=" + database,
 			},
 			ExposedPorts: []string{"5432"},
+			Args:         []string{"-c max_connections=1000"},
 		},
 	}
 }
 
 func (r *Docker) Build() error {
-	command, exposedPorts := imageToCommand(r.image)
-	containerID, err := run(command)
+	command, exposedPorts := docker.ImageToCommand(r.image)
+	containerID, err := process.Run(command)
 	if err != nil {
 		return fmt.Errorf("init Postgres error: %v", err)
 	}
@@ -53,7 +56,7 @@ func (r *Docker) Build() error {
 	}
 
 	r.containerID = containerID
-	r.port = getExposedPort(exposedPorts, 5432)
+	r.port = docker.ExposedPort(exposedPorts, 5432)
 
 	return nil
 }
@@ -138,7 +141,7 @@ func (r *Docker) Reuse(containerID string, port int) error {
 }
 
 func (r *Docker) Shutdown() error {
-	if _, err := run(fmt.Sprintf("docker stop %s", r.containerID)); err != nil {
+	if _, err := process.Run(fmt.Sprintf("docker stop %s", r.containerID)); err != nil {
 		return fmt.Errorf("stop Postgres error: %v", err)
 	}
 
@@ -161,7 +164,7 @@ func (r *Docker) connect() (*gormio.DB, error) {
 			break
 		}
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 
 	return instance, err
