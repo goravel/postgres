@@ -19,6 +19,7 @@ var _ driver.Driver = &Postgres{}
 type Postgres struct {
 	configFacade config.Config
 	config       contracts.ConfigBuilder
+	db           *gorm.DB
 	log          log.Log
 }
 
@@ -60,10 +61,16 @@ func (r *Postgres) Docker() (testing.DatabaseDriver, error) {
 }
 
 func (r *Postgres) Gorm() (*gorm.DB, driver.GormQuery, error) {
+	if r.db != nil {
+		return r.db, NewQuery(), nil
+	}
+
 	db, err := NewGorm(r.config, r.log).Build()
 	if err != nil {
 		return nil, nil, err
 	}
+
+	r.db = db
 
 	return db, NewQuery(), nil
 }
@@ -77,7 +84,7 @@ func (r *Postgres) Processor() contractsschema.Processor {
 }
 
 func (r *Postgres) version() string {
-	db, _, err := r.Gorm()
+	instance, _, err := r.Gorm()
 	if err != nil {
 		return ""
 	}
@@ -85,7 +92,7 @@ func (r *Postgres) version() string {
 	var version struct {
 		Value string
 	}
-	if err := db.Raw("SELECT current_setting('server_version') AS value;").Scan(&version).Error; err != nil {
+	if err := instance.Raw("SELECT current_setting('server_version') AS value;").Scan(&version).Error; err != nil {
 		return fmt.Sprintf("UNKNOWN: %s", err)
 	}
 
