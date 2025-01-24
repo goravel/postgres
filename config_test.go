@@ -13,7 +13,7 @@ import (
 
 type ConfigTestSuite struct {
 	suite.Suite
-	config     *ConfigBuilder
+	config     *Config
 	connection string
 	mockConfig *mocksconfig.Config
 }
@@ -26,7 +26,7 @@ func TestConfigTestSuite(t *testing.T) {
 
 func (s *ConfigTestSuite) SetupTest() {
 	s.mockConfig = mocksconfig.NewConfig(s.T())
-	s.config = NewConfigBuilder(s.mockConfig, s.connection)
+	s.config = NewConfig(s.mockConfig, s.connection)
 }
 
 func (s *ConfigTestSuite) TestReads() {

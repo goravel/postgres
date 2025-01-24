@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	"github.com/goravel/framework/contracts/database"
 )
 
 type WrapTestSuite struct {
@@ -18,7 +16,7 @@ func TestWrapSuite(t *testing.T) {
 }
 
 func (s *WrapTestSuite) SetupTest() {
-	s.wrap = NewWrap(database.DriverPostgres, "prefix_")
+	s.wrap = NewWrap("prefix_")
 }
 
 func (s *WrapTestSuite) TestColumn() {
@@ -49,10 +47,6 @@ func (s *WrapTestSuite) TestQuote() {
 func (s *WrapTestSuite) TestQuotes() {
 	result := s.wrap.Quotes([]string{"value1", "value2"})
 	s.Equal([]string{"'value1'", "'value2'"}, result)
-
-	s.wrap.driver = database.DriverSqlserver
-	result = s.wrap.Quotes([]string{"value1", "value2"})
-	s.Equal([]string{"N'value1'", "N'value2'"}, result)
 }
 
 func (s *WrapTestSuite) TestSegmentsWithMultipleSegments() {

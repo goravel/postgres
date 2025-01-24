@@ -126,20 +126,28 @@ func (s *GrammarSuite) TestCompileCreate() {
 		s.grammar.CompileCreate(mockBlueprint))
 }
 
-func (s *GrammarSuite) TestCompileDropAllDomains() {
-	s.Equal(`drop domain "domain", "user"."email" cascade`, s.grammar.CompileDropAllDomains([]string{"domain", "user.email"}))
-}
-
 func (s *GrammarSuite) TestCompileDropAllTables() {
-	s.Equal(`drop table "domain", "user"."email" cascade`, s.grammar.CompileDropAllTables([]string{"domain", "user.email"}))
+	s.Equal(`drop table "domain", "user"."email" cascade`, s.grammar.CompileDropAllTables("public", []contractsschema.Table{
+		{Schema: "public", Name: "domain"},
+		{Schema: "user", Name: "email"},
+	}))
 }
 
 func (s *GrammarSuite) TestCompileDropAllTypes() {
-	s.Equal(`drop type "domain", "user"."email" cascade`, s.grammar.CompileDropAllTypes([]string{"domain", "user.email"}))
+	s.Equal([]string{
+		`drop type "user"."email" cascade`,
+		`drop domain "domain" cascade`,
+	}, s.grammar.CompileDropAllTypes("public", []contractsschema.Type{
+		{Schema: "public", Name: "domain", Type: "domain"},
+		{Schema: "user", Name: "email"},
+	}))
 }
 
 func (s *GrammarSuite) TestCompileDropAllViews() {
-	s.Equal(`drop view "domain", "user"."email" cascade`, s.grammar.CompileDropAllViews([]string{"domain", "user.email"}))
+	s.Equal(`drop view "domain", "user"."email" cascade`, s.grammar.CompileDropAllViews("public", []contractsschema.View{
+		{Schema: "public", Name: "domain"},
+		{Schema: "user", Name: "email"},
+	}))
 }
 
 func (s *GrammarSuite) TestCompileDropColumn() {

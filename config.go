@@ -8,46 +8,46 @@ import (
 	"github.com/goravel/postgres/contracts"
 )
 
-type ConfigBuilder struct {
+type Config struct {
 	config     config.Config
 	connection string
 }
 
-func NewConfigBuilder(config config.Config, connection string) *ConfigBuilder {
-	return &ConfigBuilder{
+func NewConfig(config config.Config, connection string) *Config {
+	return &Config{
 		config:     config,
 		connection: connection,
 	}
 }
 
-func (c *ConfigBuilder) Config() config.Config {
-	return c.config
+func (r *Config) Config() config.Config {
+	return r.config
 }
 
-func (c *ConfigBuilder) Connection() string {
-	return c.connection
+func (r *Config) Connection() string {
+	return r.connection
 }
 
-func (c *ConfigBuilder) Reads() []contracts.FullConfig {
-	configs := c.config.Get(fmt.Sprintf("database.connections.%s.read", c.connection))
+func (r *Config) Reads() []contracts.FullConfig {
+	configs := r.config.Get(fmt.Sprintf("database.connections.%s.read", r.connection))
 	if readConfigs, ok := configs.([]contracts.Config); ok {
-		return c.fillDefault(readConfigs)
+		return r.fillDefault(readConfigs)
 	}
 
 	return nil
 }
 
-func (c *ConfigBuilder) Writes() []contracts.FullConfig {
-	configs := c.config.Get(fmt.Sprintf("database.connections.%s.write", c.connection))
+func (r *Config) Writes() []contracts.FullConfig {
+	configs := r.config.Get(fmt.Sprintf("database.connections.%s.write", r.connection))
 	if writeConfigs, ok := configs.([]contracts.Config); ok {
-		return c.fillDefault(writeConfigs)
+		return r.fillDefault(writeConfigs)
 	}
 
 	// Use default db configuration when write is empty
-	return c.fillDefault([]contracts.Config{{}})
+	return r.fillDefault([]contracts.Config{{}})
 }
 
-func (c *ConfigBuilder) fillDefault(configs []contracts.Config) []contracts.FullConfig {
+func (r *Config) fillDefault(configs []contracts.Config) []contracts.FullConfig {
 	if len(configs) == 0 {
 		return nil
 	}
@@ -56,15 +56,15 @@ func (c *ConfigBuilder) fillDefault(configs []contracts.Config) []contracts.Full
 	for _, config := range configs {
 		fullConfig := contracts.FullConfig{
 			Config:      config,
-			Connection:  c.connection,
+			Connection:  r.connection,
 			Driver:      Name,
-			NoLowerCase: c.config.GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", c.connection)),
-			Prefix:      c.config.GetString(fmt.Sprintf("database.connections.%s.prefix", c.connection)),
-			Singular:    c.config.GetBool(fmt.Sprintf("database.connections.%s.singular", c.connection)),
-			Sslmode:     c.config.GetString(fmt.Sprintf("database.connections.%s.sslmode", c.connection)),
-			Timezone:    c.config.GetString(fmt.Sprintf("database.connections.%s.timezone", c.connection)),
+			NoLowerCase: r.config.GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", r.connection)),
+			Prefix:      r.config.GetString(fmt.Sprintf("database.connections.%s.prefix", r.connection)),
+			Singular:    r.config.GetBool(fmt.Sprintf("database.connections.%s.singular", r.connection)),
+			Sslmode:     r.config.GetString(fmt.Sprintf("database.connections.%s.sslmode", r.connection)),
+			Timezone:    r.config.GetString(fmt.Sprintf("database.connections.%s.timezone", r.connection)),
 		}
-		if nameReplacer := c.config.Get(fmt.Sprintf("database.connections.%s.name_replacer", c.connection)); nameReplacer != nil {
+		if nameReplacer := r.config.Get(fmt.Sprintf("database.connections.%s.name_replacer", r.connection)); nameReplacer != nil {
 			if replacer, ok := nameReplacer.(contracts.Replacer); ok {
 				fullConfig.NameReplacer = replacer
 			}
@@ -72,25 +72,25 @@ func (c *ConfigBuilder) fillDefault(configs []contracts.Config) []contracts.Full
 
 		// If read or write is empty, use the default config
 		if fullConfig.Dsn == "" {
-			fullConfig.Dsn = c.config.GetString(fmt.Sprintf("database.connections.%s.dsn", c.connection))
+			fullConfig.Dsn = r.config.GetString(fmt.Sprintf("database.connections.%s.dsn", r.connection))
 		}
 		if fullConfig.Host == "" {
-			fullConfig.Host = c.config.GetString(fmt.Sprintf("database.connections.%s.host", c.connection))
+			fullConfig.Host = r.config.GetString(fmt.Sprintf("database.connections.%s.host", r.connection))
 		}
 		if fullConfig.Port == 0 {
-			fullConfig.Port = c.config.GetInt(fmt.Sprintf("database.connections.%s.port", c.connection))
+			fullConfig.Port = r.config.GetInt(fmt.Sprintf("database.connections.%s.port", r.connection))
 		}
 		if fullConfig.Username == "" {
-			fullConfig.Username = c.config.GetString(fmt.Sprintf("database.connections.%s.username", c.connection))
+			fullConfig.Username = r.config.GetString(fmt.Sprintf("database.connections.%s.username", r.connection))
 		}
 		if fullConfig.Password == "" {
-			fullConfig.Password = c.config.GetString(fmt.Sprintf("database.connections.%s.password", c.connection))
+			fullConfig.Password = r.config.GetString(fmt.Sprintf("database.connections.%s.password", r.connection))
 		}
 		if fullConfig.Schema == "" {
-			fullConfig.Schema = c.config.GetString(fmt.Sprintf("database.connections.%s.schema", c.connection), "public")
+			fullConfig.Schema = r.config.GetString(fmt.Sprintf("database.connections.%s.schema", r.connection), "public")
 		}
 		if fullConfig.Database == "" {
-			fullConfig.Database = c.config.GetString(fmt.Sprintf("database.connections.%s.database", c.connection))
+			fullConfig.Database = r.config.GetString(fmt.Sprintf("database.connections.%s.database", r.connection))
 		}
 		fullConfigs = append(fullConfigs, fullConfig)
 	}

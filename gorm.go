@@ -6,7 +6,6 @@ import (
 
 	"github.com/goravel/framework/contracts/log"
 	databasegorm "github.com/goravel/framework/database/gorm"
-	"github.com/goravel/framework/errors"
 	"github.com/goravel/framework/support/carbon"
 	"github.com/goravel/postgres/contracts"
 	"gorm.io/driver/postgres"
@@ -16,12 +15,12 @@ import (
 )
 
 type Gorm struct {
-	configBuilder contracts.ConfigBuilder
-	log           log.Log
+	config contracts.ConfigBuilder
+	log    log.Log
 }
 
 func NewGorm(configBuilder contracts.ConfigBuilder, log log.Log) *Gorm {
-	return &Gorm{configBuilder: configBuilder, log: log}
+	return &Gorm{config: configBuilder, log: log}
 }
 
 func (r *Gorm) Build() (*gorm.DB, error) {
@@ -45,7 +44,7 @@ func (r *Gorm) configsToDialectors(configs []contracts.FullConfig) ([]gorm.Diale
 	for _, config := range configs {
 		dsn := r.dns(config)
 		if dsn == "" {
-			return nil, errors.New("failed to generate DSN, please check the database configuration")
+			return nil, FailedToGenerateDSN
 		}
 
 		dialector := postgres.New(postgres.Config{
@@ -64,16 +63,17 @@ func (r *Gorm) configurePool(instance *gorm.DB) error {
 		return err
 	}
 
-	db.SetMaxIdleConns(r.configBuilder.Config().GetInt("database.pool.max_idle_conns", 10))
-	db.SetMaxOpenConns(r.configBuilder.Config().GetInt("database.pool.max_open_conns", 100))
-	db.SetConnMaxIdleTime(time.Duration(r.configBuilder.Config().GetInt("database.pool.conn_max_idletime", 3600)) * time.Second)
-	db.SetConnMaxLifetime(time.Duration(r.configBuilder.Config().GetInt("database.pool.conn_max_lifetime", 3600)) * time.Second)
+	config := r.config.Config()
+	db.SetMaxIdleConns(config.GetInt("database.pool.max_idle_conns", 10))
+	db.SetMaxOpenConns(config.GetInt("database.pool.max_open_conns", 100))
+	db.SetConnMaxIdleTime(time.Duration(config.GetInt("database.pool.conn_max_idletime", 3600)) * time.Second)
+	db.SetConnMaxLifetime(time.Duration(config.GetInt("database.pool.conn_max_lifetime", 3600)) * time.Second)
 
 	return nil
 }
 
 func (r *Gorm) configureReadWriteSeparate(instance *gorm.DB) error {
-	writers, readers, err := r.writerAndReaderDialectors()
+	writers, readers, err := r.writeAndReadDialectors()
 	if err != nil {
 		return err
 	}
@@ -99,8 +99,8 @@ func (r *Gorm) dns(config contracts.FullConfig) string {
 }
 
 func (r *Gorm) gormConfig() *gorm.Config {
-	logger := databasegorm.NewLogger(r.configBuilder.Config(), r.log)
-	writeConfigs := r.configBuilder.Writes()
+	logger := databasegorm.NewLogger(r.config.Config(), r.log)
+	writeConfigs := r.config.Writes()
 	if len(writeConfigs) == 0 {
 		return nil
 	}
@@ -122,12 +122,12 @@ func (r *Gorm) gormConfig() *gorm.Config {
 }
 
 func (r *Gorm) instance() (*gorm.DB, error) {
-	writers, _, err := r.writerAndReaderDialectors()
+	writers, _, err := r.writeAndReadDialectors()
 	if err != nil {
 		return nil, err
 	}
 	if len(writers) == 0 {
-		return nil, errors.OrmDatabaseConfigNotFound
+		return nil, ConfigNotFound
 	}
 
 	instance, err := gorm.Open(writers[0], r.gormConfig())
@@ -138,9 +138,9 @@ func (r *Gorm) instance() (*gorm.DB, error) {
 	return instance, nil
 }
 
-func (r *Gorm) writerAndReaderDialectors() (writers []gorm.Dialector, readers []gorm.Dialector, err error) {
-	writeConfigs := r.configBuilder.Writes()
-	readConfigs := r.configBuilder.Reads()
+func (r *Gorm) writeAndReadDialectors() (writers []gorm.Dialector, readers []gorm.Dialector, err error) {
+	writeConfigs := r.config.Writes()
+	readConfigs := r.config.Reads()
 
 	writers, err = r.configsToDialectors(writeConfigs)
 	if err != nil {

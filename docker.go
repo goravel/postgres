@@ -6,11 +6,13 @@ import (
 
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/support/color"
+	"github.com/goravel/postgres/contracts"
 	"gorm.io/driver/postgres"
 	gormio "gorm.io/gorm"
 )
 
 type Docker struct {
+	config      contracts.ConfigBuilder
 	containerID string
 	database    string
 	host        string
@@ -20,8 +22,9 @@ type Docker struct {
 	port        int
 }
 
-func NewDocker(database, username, password string) *Docker {
+func NewDocker(config contracts.ConfigBuilder, database, username, password string) *Docker {
 	return &Docker{
+		config:   config,
 		database: database,
 		host:     "127.0.0.1",
 		username: username,
@@ -84,7 +87,7 @@ func (r *Docker) Database(name string) (testing.DatabaseDriver, error) {
 		}
 	}()
 
-	docker := NewDocker(name, r.username, r.password)
+	docker := NewDocker(r.config, name, r.username, r.password)
 	docker.containerID = r.containerID
 	docker.port = r.port
 
@@ -121,6 +124,8 @@ func (r *Docker) Ready() error {
 	if err != nil {
 		return err
 	}
+
+	r.resetConfigPort()
 
 	return r.close(gormDB)
 }
@@ -169,4 +174,16 @@ func (r *Docker) close(gormDB *gormio.DB) error {
 	}
 
 	return db.Close()
+}
+
+func (r *Docker) resetConfigPort() {
+	writers := r.config.Config().Get(fmt.Sprintf("database.connections.%s.write", r.config.Connection()))
+	if writeConfigs, ok := writers.([]contracts.Config); ok {
+		writeConfigs[0].Port = r.port
+		r.config.Config().Add(fmt.Sprintf("database.connections.%s.write", r.config.Connection()), writeConfigs)
+
+		return
+	}
+
+	r.config.Config().Add(fmt.Sprintf("database.connections.%s.port", r.config.Connection()), r.port)
 }
