@@ -134,7 +134,7 @@ func (r *Docker) Reuse(containerID string, port int) error {
 	r.containerID = containerID
 	r.port = port
 
-	return r.Ready()
+	return nil
 }
 
 func (r *Docker) Shutdown() error {

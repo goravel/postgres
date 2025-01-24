@@ -138,10 +138,15 @@ func (r *Grammar) CompileDropAllTypes(schema string, types []contractsschema.Typ
 		}
 	}
 
-	return []string{
-		fmt.Sprintf("drop type %s cascade", strings.Join(r.EscapeNames(dropTypes), ", ")),
-		fmt.Sprintf("drop domain %s cascade", strings.Join(r.EscapeNames(dropDomains), ", ")),
+	var sql []string
+	if len(dropTypes) > 0 {
+		sql = append(sql, fmt.Sprintf("drop type %s cascade", strings.Join(r.EscapeNames(dropTypes), ", ")))
 	}
+	if len(dropDomains) > 0 {
+		sql = append(sql, fmt.Sprintf("drop domain %s cascade", strings.Join(r.EscapeNames(dropDomains), ", ")))
+	}
+
+	return sql
 }
 
 func (r *Grammar) CompileDropAllViews(schema string, views []contractsschema.View) string {

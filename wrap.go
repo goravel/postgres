@@ -8,12 +8,12 @@ import (
 )
 
 type Wrap struct {
-	tablePrefix string
+	prefix string
 }
 
-func NewWrap(tablePrefix string) *Wrap {
+func NewWrap(prefix string) *Wrap {
 	return &Wrap{
-		tablePrefix: tablePrefix,
+		prefix: prefix,
 	}
 }
 
@@ -41,7 +41,7 @@ func (r *Wrap) Columnize(columns []string) string {
 }
 
 func (r *Wrap) GetPrefix() string {
-	return r.tablePrefix
+	return r.prefix
 }
 
 func (r *Wrap) PrefixArray(prefix string, values []string) []string {
@@ -83,10 +83,10 @@ func (r *Wrap) Table(table string) string {
 	if strings.Contains(table, ".") {
 		lastDotIndex := strings.LastIndex(table, ".")
 
-		return r.Value(table[:lastDotIndex]) + "." + r.Value(r.tablePrefix+table[lastDotIndex+1:])
+		return r.Value(table[:lastDotIndex]) + "." + r.Value(r.prefix+table[lastDotIndex+1:])
 	}
 
-	return r.Value(r.tablePrefix + table)
+	return r.Value(r.prefix + table)
 }
 
 func (r *Wrap) Value(value string) string {
@@ -100,11 +100,11 @@ func (r *Wrap) Value(value string) string {
 func (r *Wrap) aliasedTable(table string) string {
 	segments := strings.Split(table, " as ")
 
-	return r.Table(segments[0]) + " as " + r.Value(r.tablePrefix+segments[1])
+	return r.Table(segments[0]) + " as " + r.Value(r.prefix+segments[1])
 }
 
 func (r *Wrap) aliasedValue(value string) string {
 	segments := strings.Split(value, " as ")
 
-	return r.Column(segments[0]) + " as " + r.Value(r.tablePrefix+segments[1])
+	return r.Column(segments[0]) + " as " + r.Value(r.prefix+segments[1])
 }

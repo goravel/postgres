@@ -100,6 +100,39 @@ func (s *ProcessorTestSuite) TestProcessForeignKeys() {
 	}
 }
 
+func (s *ProcessorTestSuite) TestProcessIndexes() {
+	tests := []struct {
+		name      string
+		dbIndexes []schema.DBIndex
+		expected  []schema.Index
+	}{
+		{
+			name: "ValidInput",
+			dbIndexes: []schema.DBIndex{
+				{Name: "users_email_unique", Columns: "email", Type: "BTREE", Primary: false, Unique: true},
+				{Name: "PRIMARY", Columns: "id", Type: "BTREE", Primary: true, Unique: true},
+				{Name: "users_name_index", Columns: "first_name,last_name", Type: "BTREE", Primary: false, Unique: false},
+			},
+			expected: []schema.Index{
+				{Name: "users_email_unique", Columns: []string{"email"}, Type: "btree", Primary: false, Unique: true},
+				{Name: "primary", Columns: []string{"id"}, Type: "btree", Primary: true, Unique: true},
+				{Name: "users_name_index", Columns: []string{"first_name", "last_name"}, Type: "btree", Primary: false, Unique: false},
+			},
+		},
+		{
+			name:      "EmptyInput",
+			dbIndexes: []schema.DBIndex{},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			result := s.processor.ProcessIndexes(tt.dbIndexes)
+			s.Equal(tt.expected, result)
+		})
+	}
+}
+
 func (s *ProcessorTestSuite) TestProcessTypes() {
 	// ValidTypes_ReturnsProcessedTypes
 	input := []schema.Type{

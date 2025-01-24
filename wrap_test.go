@@ -77,3 +77,13 @@ func (s *WrapTestSuite) TestValue() {
 	result = s.wrap.Value("value")
 	s.Equal(`"value"`, result)
 }
+
+func (s *WrapTestSuite) TestAliasedTable() {
+	result := s.wrap.aliasedTable("users as u")
+	s.Equal(`"prefix_users" as "prefix_u"`, result)
+}
+
+func (s *WrapTestSuite) TestAliasedValue() {
+	result := s.wrap.aliasedValue("users.name as user_name")
+	s.Equal(`"prefix_users"."name" as "prefix_user_name"`, result)
+}

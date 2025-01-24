@@ -65,6 +65,57 @@ func (s *GrammarSuite) TestCompileChange() {
 	}, sql)
 }
 
+func (s *GrammarSuite) TestCompileColumns() {
+	tests := []struct {
+		name          string
+		schema        string
+		table         string
+		expectedSQL   string
+		expectedError error
+	}{
+		{
+			name:   "with schema and table",
+			schema: "public",
+			table:  "users",
+			expectedSQL: `select a.attname as name, t.typname as type_name, format_type(a.atttypid, a.atttypmod) as type, ` +
+				`(select tc.collcollate from pg_catalog.pg_collation tc where tc.oid = a.attcollation) as collation, ` +
+				`not a.attnotnull as nullable, ` +
+				`(select pg_get_expr(adbin, adrelid) from pg_attrdef where c.oid = pg_attrdef.adrelid and pg_attrdef.adnum = a.attnum) as default, ` +
+				`col_description(c.oid, a.attnum) as comment ` +
+				`from pg_attribute a, pg_class c, pg_type t, pg_namespace n ` +
+				`where c.relname = 'goravel_users' and n.nspname = 'public' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid and n.oid = c.relnamespace ` +
+				`order by a.attnum`,
+			expectedError: nil,
+		},
+		{
+			name:   "with table containing dots",
+			schema: "public",
+			table:  "schema.users",
+			expectedSQL: `select a.attname as name, t.typname as type_name, format_type(a.atttypid, a.atttypmod) as type, ` +
+				`(select tc.collcollate from pg_catalog.pg_collation tc where tc.oid = a.attcollation) as collation, ` +
+				`not a.attnotnull as nullable, ` +
+				`(select pg_get_expr(adbin, adrelid) from pg_attrdef where c.oid = pg_attrdef.adrelid and pg_attrdef.adnum = a.attnum) as default, ` +
+				`col_description(c.oid, a.attnum) as comment ` +
+				`from pg_attribute a, pg_class c, pg_type t, pg_namespace n ` +
+				`where c.relname = 'goravel_users' and n.nspname = 'schema' and a.attnum > 0 and a.attrelid = c.oid and a.atttypid = t.oid and n.oid = c.relnamespace ` +
+				`order by a.attnum`,
+			expectedError: nil,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			sql, err := s.grammar.CompileColumns(test.schema, test.table)
+			if test.expectedError != nil {
+				s.Equal(test.expectedError.Error(), err.Error())
+			} else {
+				s.Nil(err)
+				s.Equal(test.expectedSQL, sql)
+			}
+		})
+	}
+}
+
 func (s *GrammarSuite) TestCompileComment() {
 	mockBlueprint := mocksschema.NewBlueprint(s.T())
 	mockColumnDefinition := mocksschema.NewColumnDefinition(s.T())
@@ -127,25 +178,28 @@ func (s *GrammarSuite) TestCompileCreate() {
 }
 
 func (s *GrammarSuite) TestCompileDropAllTables() {
-	s.Equal(`drop table "domain", "user"."email" cascade`, s.grammar.CompileDropAllTables("public", []contractsschema.Table{
+	s.Equal(`drop table "public"."domain", "public"."users" cascade`, s.grammar.CompileDropAllTables("public", []contractsschema.Table{
 		{Schema: "public", Name: "domain"},
+		{Schema: "public", Name: "users"},
 		{Schema: "user", Name: "email"},
 	}))
 }
 
 func (s *GrammarSuite) TestCompileDropAllTypes() {
 	s.Equal([]string{
-		`drop type "user"."email" cascade`,
-		`drop domain "domain" cascade`,
+		`drop type "public"."user" cascade`,
+		`drop domain "public"."domain" cascade`,
 	}, s.grammar.CompileDropAllTypes("public", []contractsschema.Type{
 		{Schema: "public", Name: "domain", Type: "domain"},
+		{Schema: "public", Name: "user"},
 		{Schema: "user", Name: "email"},
 	}))
 }
 
 func (s *GrammarSuite) TestCompileDropAllViews() {
-	s.Equal(`drop view "domain", "user"."email" cascade`, s.grammar.CompileDropAllViews("public", []contractsschema.View{
+	s.Equal(`drop view "public"."domain", "public"."users" cascade`, s.grammar.CompileDropAllViews("public", []contractsschema.View{
 		{Schema: "public", Name: "domain"},
+		{Schema: "public", Name: "users"},
 		{Schema: "user", Name: "email"},
 	}))
 }
