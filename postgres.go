@@ -17,17 +17,15 @@ import (
 var _ driver.Driver = &Postgres{}
 
 type Postgres struct {
-	configFacade config.Config
-	config       contracts.ConfigBuilder
-	db           *gorm.DB
-	log          log.Log
+	config contracts.ConfigBuilder
+	db     *gorm.DB
+	log    log.Log
 }
 
 func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
 	return &Postgres{
-		configFacade: config,
-		config:       NewConfig(config, connection),
-		log:          log,
+		config: NewConfig(config, connection),
+		log:    log,
 	}
 }
 

@@ -56,9 +56,8 @@ func TestVersion(t *testing.T) {
 	mockConfig.EXPECT().Reads().Return([]contracts.FullConfig{}).Once()
 
 	postgres := &Postgres{
-		configFacade: mockConfigFacade,
-		config:       mockConfig,
-		log:          utils.NewTestLog(),
+		config: mockConfig,
+		log:    utils.NewTestLog(),
 	}
 	version := postgres.version()
 	assert.Contains(t, version, "Debian")
