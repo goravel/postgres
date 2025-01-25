@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	"github.com/goravel/framework/contracts/database"
 )
 
 type WrapTestSuite struct {
@@ -18,7 +16,7 @@ func TestWrapSuite(t *testing.T) {
 }
 
 func (s *WrapTestSuite) SetupTest() {
-	s.wrap = NewWrap(database.DriverPostgres, "prefix_")
+	s.wrap = NewWrap("prefix_")
 }
 
 func (s *WrapTestSuite) TestColumn() {
@@ -49,10 +47,6 @@ func (s *WrapTestSuite) TestQuote() {
 func (s *WrapTestSuite) TestQuotes() {
 	result := s.wrap.Quotes([]string{"value1", "value2"})
 	s.Equal([]string{"'value1'", "'value2'"}, result)
-
-	s.wrap.driver = database.DriverSqlserver
-	result = s.wrap.Quotes([]string{"value1", "value2"})
-	s.Equal([]string{"N'value1'", "N'value2'"}, result)
 }
 
 func (s *WrapTestSuite) TestSegmentsWithMultipleSegments() {
@@ -82,4 +76,14 @@ func (s *WrapTestSuite) TestValue() {
 	// Without asterisk
 	result = s.wrap.Value("value")
 	s.Equal(`"value"`, result)
+}
+
+func (s *WrapTestSuite) TestAliasedTable() {
+	result := s.wrap.aliasedTable("users as u")
+	s.Equal(`"prefix_users" as "prefix_u"`, result)
+}
+
+func (s *WrapTestSuite) TestAliasedValue() {
+	result := s.wrap.aliasedValue("users.name as user_name")
+	s.Equal(`"prefix_users"."name" as "prefix_user_name"`, result)
 }

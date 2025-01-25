@@ -1,50 +1,51 @@
 package postgres
 
 import (
+	"fmt"
 	"testing"
 
 	contractstesting "github.com/goravel/framework/contracts/testing"
-	configmocks "github.com/goravel/framework/mocks/config"
-	"github.com/goravel/framework/support/env"
+	"github.com/goravel/framework/mocks/config"
+	"github.com/goravel/postgres/contracts"
 	"github.com/stretchr/testify/suite"
 )
 
-const (
-	testDatabase = "goravel"
-	testUsername = "goravel"
-	testPassword = "Framework!123"
-)
-
-type PostgresTestSuite struct {
+type DockerTestSuite struct {
 	suite.Suite
-	mockConfig *configmocks.Config
-	postgres   *Docker
+	connection string
+	database   string
+	username   string
+	password   string
+
+	mockConfig *config.Config
+	docker     *Docker
 }
 
-func TestPostgresTestSuite(t *testing.T) {
-	if env.IsWindows() {
-		t.Skip("Skip test that using Docker")
-	}
-
-	suite.Run(t, new(PostgresTestSuite))
+func TestDockerTestSuite(t *testing.T) {
+	suite.Run(t, new(DockerTestSuite))
 }
 
-func (s *PostgresTestSuite) SetupTest() {
-	s.mockConfig = &configmocks.Config{}
-	s.postgres = NewDocker(testDatabase, testUsername, testPassword)
+func (s *DockerTestSuite) SetupTest() {
+	s.connection = "default"
+	s.database = "goravel"
+	s.username = "goravel"
+	s.password = "Framework!123"
+	s.mockConfig = config.NewConfig(s.T())
+	s.docker = NewDocker(NewConfig(s.mockConfig, s.connection), s.database, s.username, s.password)
 }
 
-func (s *PostgresTestSuite) TestBuild() {
-	s.Nil(s.postgres.Build())
-	instance, err := s.postgres.connect()
+func (s *DockerTestSuite) Test_Build_Config_AddData_Fresh_Shutdown() {
+	s.Nil(s.docker.Build())
+
+	instance, err := s.docker.connect()
 	s.Nil(err)
 	s.NotNil(instance)
 
-	s.Equal("127.0.0.1", s.postgres.Config().Host)
-	s.Equal(testDatabase, s.postgres.Config().Database)
-	s.Equal(testUsername, s.postgres.Config().Username)
-	s.Equal(testPassword, s.postgres.Config().Password)
-	s.True(s.postgres.Config().Port > 0)
+	s.Equal("127.0.0.1", s.docker.Config().Host)
+	s.Equal(s.database, s.docker.Config().Database)
+	s.Equal(s.username, s.docker.Config().Username)
+	s.Equal(s.password, s.docker.Config().Password)
+	s.True(s.docker.Config().Port > 0)
 
 	res := instance.Exec(`
 	CREATE TABLE users (
@@ -67,7 +68,7 @@ func (s *PostgresTestSuite) TestBuild() {
 	s.Nil(res.Error)
 	s.Equal(int64(1), count)
 
-	s.Nil(s.postgres.Fresh())
+	s.Nil(s.docker.Fresh())
 
 	res = instance.Raw(`
 		SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public' and table_name = 'users';
@@ -75,17 +76,65 @@ func (s *PostgresTestSuite) TestBuild() {
 	s.Nil(res.Error)
 	s.Equal(int64(0), count)
 
-	databaseDriver, err := s.postgres.Database("another")
+	databaseDriver, err := s.docker.Database("another")
 	s.NoError(err)
 	s.NotNil(databaseDriver)
 
-	s.Nil(s.postgres.Shutdown())
+	s.Nil(s.docker.Shutdown())
 }
 
-func (s *PostgresTestSuite) TestImage() {
+func (s *DockerTestSuite) TestDatabase() {
+	s.Nil(s.docker.Build())
+
+	_, err := s.docker.connect()
+	s.Nil(err)
+
+	docker, err := s.docker.Database("another")
+	s.Nil(err)
+	s.NotNil(docker)
+
+	dockerImpl := docker.(*Docker)
+	_, err = dockerImpl.connect()
+	s.Nil(err)
+
+	s.Nil(s.docker.Shutdown())
+}
+
+func (s *DockerTestSuite) TestImage() {
 	image := contractstesting.Image{
 		Repository: "postgres",
 	}
-	s.postgres.Image(image)
-	s.Equal(&image, s.postgres.image)
+	s.docker.Image(image)
+	s.Equal(&image, s.docker.image)
+}
+
+func (s *DockerTestSuite) TestReady() {
+	s.Run("config contains write config", func() {
+		s.Nil(s.docker.Build())
+
+		s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.write", s.connection)).Return([]contracts.Config{
+			{
+				Host: "127.0.0.1",
+			},
+		}).Once()
+		s.mockConfig.EXPECT().Add(fmt.Sprintf("database.connections.%s.write", s.connection), []contracts.Config{
+			{
+				Host: "127.0.0.1",
+				Port: s.docker.port,
+			},
+		}).Once()
+
+		s.Nil(s.docker.Ready())
+		s.Nil(s.docker.Shutdown())
+	})
+
+	s.Run("config does not contain write config", func() {
+		s.Nil(s.docker.Build())
+
+		s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.write", s.connection)).Return(nil).Once()
+		s.mockConfig.EXPECT().Add(fmt.Sprintf("database.connections.%s.port", s.connection), s.docker.port).Once()
+
+		s.Nil(s.docker.Ready())
+		s.Nil(s.docker.Shutdown())
+	})
 }

@@ -6,6 +6,7 @@ import (
 
 type ConfigBuilder interface {
 	Config() contractsconfig.Config
+	Connection() string
 	Reads() []FullConfig
 	Writes() []FullConfig
 }

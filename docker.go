@@ -6,11 +6,15 @@ import (
 
 	"github.com/goravel/framework/contracts/testing"
 	"github.com/goravel/framework/support/color"
+	"github.com/goravel/framework/support/docker"
+	"github.com/goravel/framework/support/process"
+	"github.com/goravel/postgres/contracts"
 	"gorm.io/driver/postgres"
 	gormio "gorm.io/gorm"
 )
 
 type Docker struct {
+	config      contracts.ConfigBuilder
 	containerID string
 	database    string
 	host        string
@@ -20,8 +24,9 @@ type Docker struct {
 	port        int
 }
 
-func NewDocker(database, username, password string) *Docker {
+func NewDocker(config contracts.ConfigBuilder, database, username, password string) *Docker {
 	return &Docker{
+		config:   config,
 		database: database,
 		host:     "127.0.0.1",
 		username: username,
@@ -35,13 +40,14 @@ func NewDocker(database, username, password string) *Docker {
 				"POSTGRES_DB=" + database,
 			},
 			ExposedPorts: []string{"5432"},
+			Args:         []string{"-c max_connections=1000"},
 		},
 	}
 }
 
 func (r *Docker) Build() error {
-	command, exposedPorts := imageToCommand(r.image)
-	containerID, err := run(command)
+	command, exposedPorts := docker.ImageToCommand(r.image)
+	containerID, err := process.Run(command)
 	if err != nil {
 		return fmt.Errorf("init Postgres error: %v", err)
 	}
@@ -50,7 +56,7 @@ func (r *Docker) Build() error {
 	}
 
 	r.containerID = containerID
-	r.port = getExposedPort(exposedPorts, 5432)
+	r.port = docker.ExposedPort(exposedPorts, 5432)
 
 	return nil
 }
@@ -84,7 +90,7 @@ func (r *Docker) Database(name string) (testing.DatabaseDriver, error) {
 		}
 	}()
 
-	docker := NewDocker(name, r.username, r.password)
+	docker := NewDocker(r.config, name, r.username, r.password)
 	docker.containerID = r.containerID
 	docker.port = r.port
 
@@ -122,6 +128,8 @@ func (r *Docker) Ready() error {
 		return err
 	}
 
+	r.resetConfigPort()
+
 	return r.close(gormDB)
 }
 
@@ -129,11 +137,11 @@ func (r *Docker) Reuse(containerID string, port int) error {
 	r.containerID = containerID
 	r.port = port
 
-	return r.Ready()
+	return nil
 }
 
 func (r *Docker) Shutdown() error {
-	if _, err := run(fmt.Sprintf("docker stop %s", r.containerID)); err != nil {
+	if _, err := process.Run(fmt.Sprintf("docker stop %s", r.containerID)); err != nil {
 		return fmt.Errorf("stop Postgres error: %v", err)
 	}
 
@@ -156,7 +164,7 @@ func (r *Docker) connect() (*gormio.DB, error) {
 			break
 		}
 
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 
 	return instance, err
@@ -169,4 +177,16 @@ func (r *Docker) close(gormDB *gormio.DB) error {
 	}
 
 	return db.Close()
+}
+
+func (r *Docker) resetConfigPort() {
+	writers := r.config.Config().Get(fmt.Sprintf("database.connections.%s.write", r.config.Connection()))
+	if writeConfigs, ok := writers.([]contracts.Config); ok {
+		writeConfigs[0].Port = r.port
+		r.config.Config().Add(fmt.Sprintf("database.connections.%s.write", r.config.Connection()), writeConfigs)
+
+		return
+	}
+
+	r.config.Config().Add(fmt.Sprintf("database.connections.%s.port", r.config.Connection()), r.port)
 }
