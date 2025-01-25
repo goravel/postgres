@@ -43,7 +43,7 @@ func (r *Grammar) CompileAdd(blueprint contractsschema.Blueprint, command *contr
 }
 
 func (r *Grammar) CompileChange(blueprint contractsschema.Blueprint, command *contractsschema.Command) []string {
-	changes := []string{fmt.Sprintf("alter column %s type %s", r.wrap.Column(command.Column.GetName()), getType(r, command.Column))}
+	changes := []string{fmt.Sprintf("alter column %s type %s", r.wrap.Column(command.Column.GetName()), schema.ColumnType(r, command.Column))}
 	for _, modifier := range r.modifiers {
 		if change := modifier(blueprint, command.Column); change != "" {
 			changes = append(changes, fmt.Sprintf("alter column %s%s", r.wrap.Column(command.Column.GetName()), change))
@@ -379,12 +379,12 @@ func (r *Grammar) ModifyDefault(blueprint contractsschema.Blueprint, column cont
 			return ""
 		}
 		if column.GetDefault() != nil {
-			return fmt.Sprintf(" set default %s", getDefaultValue(column.GetDefault()))
+			return fmt.Sprintf(" set default %s", schema.ColumnDefaultValue(column.GetDefault()))
 		}
 		return " drop default"
 	}
 	if column.GetDefault() != nil {
-		return fmt.Sprintf(" default %s", getDefaultValue(column.GetDefault()))
+		return fmt.Sprintf(" default %s", schema.ColumnDefaultValue(column.GetDefault()))
 	}
 
 	return ""
@@ -520,7 +520,7 @@ func (r *Grammar) TypeTimeTz(column contractsschema.ColumnDefinition) string {
 
 func (r *Grammar) TypeTimestamp(column contractsschema.ColumnDefinition) string {
 	if column.GetUseCurrent() {
-		column.Default(Expression("CURRENT_TIMESTAMP"))
+		column.Default(schema.Expression("CURRENT_TIMESTAMP"))
 	}
 
 	return fmt.Sprintf("timestamp(%d) without time zone", column.GetPrecision())
@@ -528,7 +528,7 @@ func (r *Grammar) TypeTimestamp(column contractsschema.ColumnDefinition) string 
 
 func (r *Grammar) TypeTimestampTz(column contractsschema.ColumnDefinition) string {
 	if column.GetUseCurrent() {
-		column.Default(Expression("CURRENT_TIMESTAMP"))
+		column.Default(schema.Expression("CURRENT_TIMESTAMP"))
 	}
 
 	return fmt.Sprintf("timestamp(%d) with time zone", column.GetPrecision())
@@ -552,7 +552,7 @@ func (r *Grammar) getColumns(blueprint contractsschema.Blueprint) []string {
 }
 
 func (r *Grammar) getColumn(blueprint contractsschema.Blueprint, column contractsschema.ColumnDefinition) string {
-	sql := fmt.Sprintf("%s %s", r.wrap.Column(column.GetName()), getType(r, column))
+	sql := fmt.Sprintf("%s %s", r.wrap.Column(column.GetName()), schema.ColumnType(r, column))
 
 	for _, modifier := range r.modifiers {
 		sql += modifier(blueprint, column)

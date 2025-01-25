@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	contractsschema "github.com/goravel/framework/contracts/database/schema"
+	"github.com/goravel/framework/database/schema"
 	mocksschema "github.com/goravel/framework/mocks/database/schema"
 	"github.com/goravel/framework/support/convert"
 )
@@ -625,7 +626,7 @@ func (s *GrammarSuite) TestTypeString() {
 func (s *GrammarSuite) TestTypeTimestamp() {
 	mockColumn := mocksschema.NewColumnDefinition(s.T())
 	mockColumn.EXPECT().GetUseCurrent().Return(true).Once()
-	mockColumn.EXPECT().Default(Expression("CURRENT_TIMESTAMP")).Return(mockColumn).Once()
+	mockColumn.EXPECT().Default(schema.Expression("CURRENT_TIMESTAMP")).Return(mockColumn).Once()
 	mockColumn.EXPECT().GetPrecision().Return(3).Once()
 	s.Equal("timestamp(3) without time zone", s.grammar.TypeTimestamp(mockColumn))
 }
@@ -633,7 +634,7 @@ func (s *GrammarSuite) TestTypeTimestamp() {
 func (s *GrammarSuite) TestTypeTimestampTz() {
 	mockColumn := mocksschema.NewColumnDefinition(s.T())
 	mockColumn.EXPECT().GetUseCurrent().Return(true).Once()
-	mockColumn.EXPECT().Default(Expression("CURRENT_TIMESTAMP")).Return(mockColumn).Once()
+	mockColumn.EXPECT().Default(schema.Expression("CURRENT_TIMESTAMP")).Return(mockColumn).Once()
 	mockColumn.EXPECT().GetPrecision().Return(3).Once()
 	s.Equal("timestamp(3) with time zone", s.grammar.TypeTimestampTz(mockColumn))
 }
