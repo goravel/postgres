@@ -419,6 +419,10 @@ func (r *Grammar) TypeBigInteger(column contractsschema.ColumnDefinition) string
 	return "bigint"
 }
 
+func (r *Grammar) TypeBoolean(column contractsschema.ColumnDefinition) string {
+	return "boolean"
+}
+
 func (r *Grammar) TypeChar(column contractsschema.ColumnDefinition) string {
 	length := column.GetLength()
 	if length > 0 {
