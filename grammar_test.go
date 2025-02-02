@@ -3,10 +3,12 @@ package postgres
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
 	contractsschema "github.com/goravel/framework/contracts/database/schema"
 	"github.com/goravel/framework/database/schema"
+	"github.com/goravel/framework/errors"
 	mocksschema "github.com/goravel/framework/mocks/database/schema"
 	"github.com/goravel/framework/support/convert"
 )
@@ -179,7 +181,9 @@ func (s *GrammarSuite) TestCompileCreate() {
 }
 
 func (s *GrammarSuite) TestCompileDropAllTables() {
-	s.Equal(`drop table "public"."domain", "public"."users" cascade`, s.grammar.CompileDropAllTables("public", []contractsschema.Table{
+	s.Equal([]string{
+		`drop table "public"."domain", "public"."users" cascade`,
+	}, s.grammar.CompileDropAllTables("public", []contractsschema.Table{
 		{Schema: "public", Name: "domain"},
 		{Schema: "public", Name: "users"},
 		{Schema: "user", Name: "email"},
@@ -198,7 +202,9 @@ func (s *GrammarSuite) TestCompileDropAllTypes() {
 }
 
 func (s *GrammarSuite) TestCompileDropAllViews() {
-	s.Equal(`drop view "public"."domain", "public"."users" cascade`, s.grammar.CompileDropAllViews("public", []contractsschema.View{
+	s.Equal([]string{
+		`drop view "public"."domain", "public"."users" cascade`,
+	}, s.grammar.CompileDropAllViews("public", []contractsschema.View{
 		{Schema: "public", Name: "domain"},
 		{Schema: "public", Name: "users"},
 		{Schema: "user", Name: "email"},
@@ -637,4 +643,26 @@ func (s *GrammarSuite) TestTypeTimestampTz() {
 	mockColumn.EXPECT().Default(schema.Expression("CURRENT_TIMESTAMP")).Return(mockColumn).Once()
 	mockColumn.EXPECT().GetPrecision().Return(3).Once()
 	s.Equal("timestamp(3) with time zone", s.grammar.TypeTimestampTz(mockColumn))
+}
+
+func TestParseSchemaAndTable(t *testing.T) {
+	tests := []struct {
+		reference      string
+		defaultSchema  string
+		expectedSchema string
+		expectedTable  string
+		expectedError  error
+	}{
+		{"public.users", "public", "public", "users", nil},
+		{"users", "goravel", "goravel", "users", nil},
+		{"", "", "", "", errors.SchemaEmptyReferenceString},
+		{"public.users.extra", "", "", "", errors.SchemaErrorReferenceFormat},
+	}
+
+	for _, test := range tests {
+		schema, table, err := parseSchemaAndTable(test.reference, test.defaultSchema)
+		assert.Equal(t, test.expectedSchema, schema)
+		assert.Equal(t, test.expectedTable, table)
+		assert.Equal(t, test.expectedError, err)
+	}
 }

@@ -1,4 +1,5 @@
-# postgres
+# Postgres
+
 The Postgres driver for facades.Orm() of Goravel.
 
 ## Version
