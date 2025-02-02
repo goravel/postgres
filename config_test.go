@@ -31,11 +31,11 @@ func (s *ConfigTestSuite) SetupTest() {
 
 func (s *ConfigTestSuite) TestReads() {
 	// Test when configs is empty
-	s.mockConfig.EXPECT().Get("database.connections.postgres.read").Return(nil).Once()
+	s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.read", s.connection)).Return(nil).Once()
 	s.Nil(s.config.Reads())
 
 	// Test when configs is not empty
-	s.mockConfig.EXPECT().Get("database.connections.postgres.read").Return([]contracts.Config{
+	s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.read", s.connection)).Return([]contracts.Config{
 		{
 			Dsn:      "dsn",
 			Database: "forge",
@@ -77,7 +77,7 @@ func (s *ConfigTestSuite) TestReads() {
 
 func (s *ConfigTestSuite) TestWrites() {
 	s.Run("success when configs is empty", func() {
-		s.mockConfig.EXPECT().Get("database.connections.postgres.write").Return(nil).Once()
+		s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.write", s.connection)).Return(nil).Once()
 		s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.prefix", s.connection)).Return("goravel_").Once()
 		s.mockConfig.EXPECT().GetBool(fmt.Sprintf("database.connections.%s.singular", s.connection)).Return(false).Once()
 		s.mockConfig.EXPECT().GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", s.connection)).Return(false).Once()
@@ -116,7 +116,7 @@ func (s *ConfigTestSuite) TestWrites() {
 	})
 
 	s.Run("success when configs is not empty", func() {
-		s.mockConfig.EXPECT().Get("database.connections.postgres.write").Return([]contracts.Config{
+		s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.write", s.connection)).Return([]contracts.Config{
 			{
 				Database: "forge",
 			},

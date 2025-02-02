@@ -9,6 +9,7 @@ import (
 
 	contractsschema "github.com/goravel/framework/contracts/database/schema"
 	"github.com/goravel/framework/database/schema"
+	"github.com/goravel/framework/errors"
 	"github.com/goravel/framework/support/collect"
 )
 
@@ -19,23 +20,23 @@ type Grammar struct {
 	modifiers         []func(contractsschema.Blueprint, contractsschema.ColumnDefinition) string
 	prefix            string
 	serials           []string
-	wrap              *Wrap
+	wrap              *schema.Wrap
 }
 
 func NewGrammar(prefix string) *Grammar {
-	postgres := &Grammar{
+	grammar := &Grammar{
 		attributeCommands: []string{schema.CommandComment},
 		prefix:            prefix,
 		serials:           []string{"bigInteger", "integer", "mediumInteger", "smallInteger", "tinyInteger"},
-		wrap:              NewWrap(prefix),
+		wrap:              schema.NewWrap(prefix),
 	}
-	postgres.modifiers = []func(contractsschema.Blueprint, contractsschema.ColumnDefinition) string{
-		postgres.ModifyDefault,
-		postgres.ModifyIncrement,
-		postgres.ModifyNullable,
+	grammar.modifiers = []func(contractsschema.Blueprint, contractsschema.ColumnDefinition) string{
+		grammar.ModifyDefault,
+		grammar.ModifyIncrement,
+		grammar.ModifyNullable,
 	}
 
-	return postgres
+	return grammar
 }
 
 func (r *Grammar) CompileAdd(blueprint contractsschema.Blueprint, command *contractsschema.Command) string {
@@ -102,7 +103,7 @@ func (r *Grammar) CompileDropAllDomains(domains []string) string {
 	return fmt.Sprintf("drop domain %s cascade", strings.Join(r.EscapeNames(domains), ", "))
 }
 
-func (r *Grammar) CompileDropAllTables(schema string, tables []contractsschema.Table) string {
+func (r *Grammar) CompileDropAllTables(schema string, tables []contractsschema.Table) []string {
 	excludedTables := r.EscapeNames([]string{"spatial_ref_sys"})
 	escapedSchema := r.EscapeNames([]string{schema})[0]
 
@@ -119,10 +120,10 @@ func (r *Grammar) CompileDropAllTables(schema string, tables []contractsschema.T
 	}
 
 	if len(dropTables) == 0 {
-		return ""
+		return nil
 	}
 
-	return fmt.Sprintf("drop table %s cascade", strings.Join(r.EscapeNames(dropTables), ", "))
+	return []string{fmt.Sprintf("drop table %s cascade", strings.Join(r.EscapeNames(dropTables), ", "))}
 }
 
 func (r *Grammar) CompileDropAllTypes(schema string, types []contractsschema.Type) []string {
@@ -149,7 +150,7 @@ func (r *Grammar) CompileDropAllTypes(schema string, types []contractsschema.Typ
 	return sql
 }
 
-func (r *Grammar) CompileDropAllViews(schema string, views []contractsschema.View) string {
+func (r *Grammar) CompileDropAllViews(schema string, views []contractsschema.View) []string {
 	var dropViews []string
 	for _, view := range views {
 		if schema == view.Schema {
@@ -157,10 +158,10 @@ func (r *Grammar) CompileDropAllViews(schema string, views []contractsschema.Vie
 		}
 	}
 	if len(dropViews) == 0 {
-		return ""
+		return nil
 	}
 
-	return fmt.Sprintf("drop view %s cascade", strings.Join(r.EscapeNames(dropViews), ", "))
+	return []string{fmt.Sprintf("drop view %s cascade", strings.Join(r.EscapeNames(dropViews), ", "))}
 }
 
 func (r *Grammar) CompileDropColumn(blueprint contractsschema.Blueprint, command *contractsschema.Command) []string {
@@ -563,4 +564,25 @@ func (r *Grammar) getColumn(blueprint contractsschema.Blueprint, column contract
 	}
 
 	return sql
+}
+
+func parseSchemaAndTable(reference, defaultSchema string) (string, string, error) {
+	if reference == "" {
+		return "", "", errors.SchemaEmptyReferenceString
+	}
+
+	parts := strings.Split(reference, ".")
+	if len(parts) > 2 {
+		return "", "", errors.SchemaErrorReferenceFormat
+	}
+
+	schema := defaultSchema
+	if len(parts) == 2 {
+		schema = parts[0]
+		parts = parts[1:]
+	}
+
+	table := parts[0]
+
+	return schema, table, nil
 }
