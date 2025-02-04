@@ -33,8 +33,8 @@ import "github.com/goravel/postgres"
 ```
 // config/database.go
 import (
-    "github.com/goravel/framework/contracts/database"
-    "github.com/goravel/framework/contracts/database/orm"
+    "github.com/goravel/framework/contracts/database/driver"
+    "github.com/goravel/postgres/contracts"
     postgresfacades "github.com/goravel/postgres/facades"
 )
 
@@ -50,15 +50,15 @@ import (
         "timezone": "UTC", // Asia/Shanghai
         "prefix":   "",
         "singular": false,
-        "via": func() (orm.Driver, error) {
+        "via": func() (driver.Driver, error) {
             return postgresfacades.Postgres("postgres"), nil
         },
         // Optional
-        "read": []database.Config{
+        "read": []contracts.Config{
             {Host: "192.168.1.1", Port: 3306, Database: "forge", Username: "root", Password: "123123"},
         },
         // Optional
-        "write": []database.Config{
+        "write": []contracts.Config{
             {Host: "192.168.1.2", Port: 3306, Database: "forge", Username: "root", Password: "123123"},
         },
     },
