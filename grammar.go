@@ -301,6 +301,14 @@ func (r *Grammar) CompileRename(blueprint contractsschema.Blueprint, command *co
 	return fmt.Sprintf("alter table %s rename to %s", r.wrap.Table(blueprint.GetTableName()), r.wrap.Table(command.To))
 }
 
+func (r *Grammar) CompileRenameColumn(_ contractsschema.Schema, blueprint contractsschema.Blueprint, command *contractsschema.Command) string {
+	return fmt.Sprintf("alter table %s rename column %s to %s",
+		r.wrap.Table(blueprint.GetTableName()),
+		r.wrap.Column(command.From),
+		r.wrap.Column(command.To),
+	)
+}
+
 func (r *Grammar) CompileRenameIndex(_ contractsschema.Schema, _ contractsschema.Blueprint, command *contractsschema.Command) []string {
 	return []string{
 		fmt.Sprintf("alter index %s rename to %s", r.wrap.Column(command.From), r.wrap.Column(command.To)),
