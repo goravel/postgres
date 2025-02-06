@@ -48,8 +48,9 @@ import (
         "password": config.Env("DB_PASSWORD", ""),
         "sslmode":  "disable",
         "timezone": "UTC", // Asia/Shanghai
-        "prefix":   "",
         "singular": false,
+        "prefix":   "",
+        "schema":   "",
         "via": func() (driver.Driver, error) {
             return postgresfacades.Postgres("postgres"), nil
         },
