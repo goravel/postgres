@@ -5,7 +5,7 @@ go 1.22.7
 toolchain go1.23.6
 
 require (
-	github.com/goravel/framework v1.15.2-0.20250202111117-cbb806d1e8de
+	github.com/goravel/framework v1.15.3
 	github.com/spf13/cast v1.7.1
 	github.com/stretchr/testify v1.10.0
 	gorm.io/driver/postgres v1.5.11
