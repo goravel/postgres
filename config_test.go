@@ -137,7 +137,7 @@ func (s *ConfigTestSuite) TestWrites() {
 		s.Equal([]contracts.FullConfig{
 			{
 				Connection:   s.connection,
-				Driver:       "postgres",
+				Driver:       Name,
 				Prefix:       "goravel_",
 				Singular:     false,
 				Sslmode:      "disable",
@@ -204,7 +204,7 @@ func (s *ConfigTestSuite) TestFillDefault() {
 			expectConfigs: []contracts.FullConfig{
 				{
 					Connection:   s.connection,
-					Driver:       "postgres",
+					Driver:       Name,
 					Prefix:       prefix,
 					Singular:     singular,
 					Sslmode:      sslmode,
@@ -247,7 +247,7 @@ func (s *ConfigTestSuite) TestFillDefault() {
 			expectConfigs: []contracts.FullConfig{
 				{
 					Connection:   s.connection,
-					Driver:       "postgres",
+					Driver:       Name,
 					Prefix:       prefix,
 					Singular:     singular,
 					Sslmode:      sslmode,
