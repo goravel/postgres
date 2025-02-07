@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	contractstesting "github.com/goravel/framework/contracts/testing"
+	"github.com/goravel/framework/contracts/testing/docker"
 	"github.com/goravel/framework/mocks/config"
 	"github.com/goravel/postgres/contracts"
 	"github.com/stretchr/testify/suite"
@@ -101,7 +101,7 @@ func (s *DockerTestSuite) TestDatabase() {
 }
 
 func (s *DockerTestSuite) TestImage() {
-	image := contractstesting.Image{
+	image := docker.Image{
 		Repository: "postgres",
 	}
 	s.docker.Image(image)
