@@ -64,6 +64,7 @@ func (r *Docker) Build() error {
 func (r *Docker) Config() contractsdocker.DatabaseConfig {
 	return contractsdocker.DatabaseConfig{
 		ContainerID: r.containerID,
+		Driver:      Name,
 		Host:        r.host,
 		Port:        r.port,
 		Database:    r.database,
