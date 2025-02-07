@@ -2,7 +2,7 @@ module github.com/goravel/postgres
 
 go 1.22.7
 
-toolchain go1.23.4
+toolchain go1.23.6
 
 require (
 	github.com/goravel/framework v1.15.2-0.20250202111117-cbb806d1e8de
