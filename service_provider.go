@@ -7,7 +7,7 @@ import (
 
 const (
 	Binding = "goravel.postgres"
-	Name    = "PostgresSQL"
+	Name    = "PostgreSQL"
 )
 
 var App foundation.Application

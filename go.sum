@@ -62,6 +62,8 @@ github.com/goravel/framework v1.15.2-0.20250207105840-b8242bc2a853 h1:YXeM98oAlu
 github.com/goravel/framework v1.15.2-0.20250207105840-b8242bc2a853/go.mod h1:5Il8ODw11sGkktLaEi1cKHIoI9P//wdcLSGjHGUsK58=
 github.com/goravel/framework v1.15.2-0.20250209050736-c63da33a6ac2 h1:BSmCZmyQtJ7jFeVCcexQiSBC9o/tyhDNZsuO23e2pz8=
 github.com/goravel/framework v1.15.2-0.20250209050736-c63da33a6ac2/go.mod h1:msPmnGdCt7226/Mw48qh/0iExOT/r6rlpzUhIzfTAfA=
+github.com/goravel/framework v1.15.2-0.20250210073917-7edffd9b4390 h1:B73mifdcXKESRC+JVx6xFavNCs1CN0S9VmlYYRDxsII=
+github.com/goravel/framework v1.15.2-0.20250210073917-7edffd9b4390/go.mod h1:msPmnGdCt7226/Mw48qh/0iExOT/r6rlpzUhIzfTAfA=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
 github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
 github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 h1:iCEnooe7UlwOQYpKFhBabPMi4aNAfoODPEFNiAnClxo=
