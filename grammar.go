@@ -322,6 +322,13 @@ func (r *Grammar) CompileTables(_ string) string {
 		"order by c.relname"
 }
 
+func (r *Grammar) CompileTableComment(blueprint contractsschema.Blueprint, command *contractsschema.Command) string {
+	return fmt.Sprintf("comment on table %s is '%s'",
+		r.wrap.Table(blueprint.GetTableName()),
+		strings.ReplaceAll(command.Value, "'", "''"),
+	)
+}
+
 func (r *Grammar) CompileTypes() string {
 	return `select t.typname as name, n.nspname as schema, t.typtype as type, t.typcategory as category, 
 		((t.typinput = 'array_in'::regproc and t.typoutput = 'array_out'::regproc) or t.typtype = 'm') as implicit 

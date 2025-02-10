@@ -582,6 +582,15 @@ func (s *GrammarSuite) TestModifyIncrement() {
 	s.Equal(" primary key", s.grammar.ModifyIncrement(mockBlueprint, mockColumn))
 }
 
+func (s *GrammarSuite) TestTableComment() {
+	mockBlueprint := mocksschema.NewBlueprint(s.T())
+	mockBlueprint.EXPECT().GetTableName().Return("users").Once()
+
+	s.Equal(`comment on table "goravel_users" is 'It''s a table comment'`, s.grammar.CompileTableComment(mockBlueprint, &contractsschema.Command{
+		Value: "It's a table comment",
+	}))
+}
+
 func (s *GrammarSuite) TestTypeBigInteger() {
 	mockColumn1 := mocksschema.NewColumnDefinition(s.T())
 	mockColumn1.EXPECT().GetAutoIncrement().Return(true).Once()
