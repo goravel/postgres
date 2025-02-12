@@ -1,8 +1,10 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/goravel/framework/contracts/config"
 	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/database/driver"
@@ -36,23 +38,34 @@ func (r *Postgres) Config() database.Config {
 	}
 
 	return database.Config{
-		Connection: writers[0].Connection,
-		Database:   writers[0].Database,
-		Driver:     Name,
-		Host:       writers[0].Host,
-		Password:   writers[0].Password,
-		Port:       writers[0].Port,
-		Prefix:     writers[0].Prefix,
-		Schema:     writers[0].Schema,
-		Username:   writers[0].Username,
-		Version:    r.version(),
+		Connection:        writers[0].Connection,
+		Dsn:               writers[0].Dsn,
+		Database:          writers[0].Database,
+		Driver:            Name,
+		Host:              writers[0].Host,
+		Password:          writers[0].Password,
+		Port:              writers[0].Port,
+		Prefix:            writers[0].Prefix,
+		Schema:            writers[0].Schema,
+		Username:          writers[0].Username,
+		Version:           r.version(),
+		PlaceholderFormat: sq.Dollar,
 	}
+}
+
+func (r *Postgres) DB() (*sql.DB, error) {
+	gormDB, _, err := r.Gorm()
+	if err != nil {
+		return nil, err
+	}
+
+	return gormDB.DB()
 }
 
 func (r *Postgres) Docker() (docker.DatabaseDriver, error) {
 	writers := r.config.Writes()
 	if len(writers) == 0 {
-		return nil, errors.OrmDatabaseConfigNotFound
+		return nil, errors.DatabaseConfigNotFound
 	}
 
 	return NewDocker(r.config, writers[0].Database, writers[0].Username, writers[0].Password), nil
