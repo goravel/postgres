@@ -52,7 +52,7 @@ import (
         "prefix":   "",
         "schema":   "",
         "via": func() (driver.Driver, error) {
-            return postgresfacades.Postgres("postgres"), nil
+            return postgresfacades.Postgres("postgres")
         },
         // Optional
         "read": []contracts.Config{
