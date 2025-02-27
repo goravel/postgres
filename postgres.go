@@ -13,6 +13,7 @@ import (
 	"github.com/goravel/framework/contracts/testing/docker"
 	"github.com/goravel/framework/errors"
 	"github.com/goravel/postgres/contracts"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -69,6 +70,10 @@ func (r *Postgres) Docker() (docker.DatabaseDriver, error) {
 	}
 
 	return NewDocker(r.config, writers[0].Database, writers[0].Username, writers[0].Password), nil
+}
+
+func (r *Postgres) Explain(sql string, vars ...any) string {
+	return postgres.New(postgres.Config{}).Explain(sql, vars...)
 }
 
 func (r *Postgres) Gorm() (*gorm.DB, driver.GormQuery, error) {
