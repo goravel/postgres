@@ -59,7 +59,7 @@ func TestVersion(t *testing.T) {
 		config: mockConfig,
 		log:    utils.NewTestLog(),
 	}
-	version := postgres.version()
+	version := postgres.getVersion()
 	assert.Contains(t, version, "Debian")
 	assert.NoError(t, docker.Shutdown())
 }

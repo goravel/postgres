@@ -20,9 +20,10 @@ import (
 var _ driver.Driver = &Postgres{}
 
 type Postgres struct {
-	config contracts.ConfigBuilder
-	db     *gorm.DB
-	log    log.Log
+	config  contracts.ConfigBuilder
+	db      *gorm.DB
+	log     log.Log
+	version string
 }
 
 func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
@@ -49,7 +50,7 @@ func (r *Postgres) Config() database.Config {
 		Prefix:            writers[0].Prefix,
 		Schema:            writers[0].Schema,
 		Username:          writers[0].Username,
-		Version:           r.version(),
+		Version:           r.getVersion(),
 		PlaceholderFormat: sq.Dollar,
 	}
 }
@@ -99,7 +100,11 @@ func (r *Postgres) Processor() contractsschema.Processor {
 	return NewProcessor()
 }
 
-func (r *Postgres) version() string {
+func (r *Postgres) getVersion() string {
+	if r.version != "" {
+		return r.version
+	}
+
 	instance, _, err := r.Gorm()
 	if err != nil {
 		return ""
@@ -109,8 +114,10 @@ func (r *Postgres) version() string {
 		Value string
 	}
 	if err := instance.Raw("SELECT current_setting('server_version') AS value;").Scan(&version).Error; err != nil {
-		return fmt.Sprintf("UNKNOWN: %s", err)
+		r.version = fmt.Sprintf("UNKNOWN: %s", err)
+	} else {
+		r.version = version.Value
 	}
 
-	return version.Value
+	return r.version
 }
