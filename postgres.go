@@ -114,10 +114,10 @@ func (r *Postgres) getVersion() string {
 		Value string
 	}
 	if err := instance.Raw("SELECT current_setting('server_version') AS value;").Scan(&version).Error; err != nil {
-		return fmt.Sprintf("UNKNOWN: %s", err)
+		r.version = fmt.Sprintf("UNKNOWN: %s", err)
+	} else {
+		r.version = version.Value
 	}
-
-	r.version = version.Value
 
 	return r.version
 }
