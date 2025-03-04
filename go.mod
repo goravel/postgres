@@ -6,7 +6,7 @@ toolchain go1.24.0
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/goravel/framework v1.15.2-0.20250227083336-e26aa18348c4
+	github.com/goravel/framework v1.15.2-0.20250304093328-f7dce3e28b38
 	github.com/spf13/cast v1.7.1
 	github.com/stretchr/testify v1.10.0
 	gorm.io/driver/postgres v1.5.11
@@ -47,7 +47,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.33.0 // indirect
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
 	golang.org/x/crypto v0.35.0 // indirect
-	golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa // indirect
+	golang.org/x/exp v0.0.0-20250228200357-dead58393ab7 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/sync v0.11.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
