@@ -3,12 +3,12 @@ package postgres
 import (
 	"strings"
 
-	"github.com/goravel/framework/contracts/database/schema"
+	"github.com/goravel/framework/contracts/database/driver"
 	"github.com/goravel/framework/support/str"
 	"github.com/spf13/cast"
 )
 
-var _ schema.Processor = &Processor{}
+var _ driver.Processor = &Processor{}
 
 type Processor struct {
 }
@@ -17,15 +17,15 @@ func NewProcessor() *Processor {
 	return &Processor{}
 }
 
-func (r Processor) ProcessColumns(dbColumns []schema.DBColumn) []schema.Column {
-	var columns []schema.Column
+func (r Processor) ProcessColumns(dbColumns []driver.DBColumn) []driver.Column {
+	var columns []driver.Column
 	for _, dbColumn := range dbColumns {
 		var autoincrement bool
 		if str.Of(dbColumn.Default).StartsWith("nextval(") {
 			autoincrement = true
 		}
 
-		columns = append(columns, schema.Column{
+		columns = append(columns, driver.Column{
 			Autoincrement: autoincrement,
 			Collation:     dbColumn.Collation,
 			Comment:       dbColumn.Comment,
@@ -40,8 +40,8 @@ func (r Processor) ProcessColumns(dbColumns []schema.DBColumn) []schema.Column {
 	return columns
 }
 
-func (r Processor) ProcessForeignKeys(dbForeignKeys []schema.DBForeignKey) []schema.ForeignKey {
-	var foreignKeys []schema.ForeignKey
+func (r Processor) ProcessForeignKeys(dbForeignKeys []driver.DBForeignKey) []driver.ForeignKey {
+	var foreignKeys []driver.ForeignKey
 
 	short := map[string]string{
 		"a": "no action",
@@ -61,7 +61,7 @@ func (r Processor) ProcessForeignKeys(dbForeignKeys []schema.DBForeignKey) []sch
 			onDelete = strings.ToLower(dbForeignKey.OnDelete)
 		}
 
-		foreignKeys = append(foreignKeys, schema.ForeignKey{
+		foreignKeys = append(foreignKeys, driver.ForeignKey{
 			Name:           dbForeignKey.Name,
 			Columns:        strings.Split(dbForeignKey.Columns, ","),
 			ForeignSchema:  dbForeignKey.ForeignSchema,
@@ -75,10 +75,10 @@ func (r Processor) ProcessForeignKeys(dbForeignKeys []schema.DBForeignKey) []sch
 	return foreignKeys
 }
 
-func (r Processor) ProcessIndexes(dbIndexes []schema.DBIndex) []schema.Index {
-	var indexes []schema.Index
+func (r Processor) ProcessIndexes(dbIndexes []driver.DBIndex) []driver.Index {
+	var indexes []driver.Index
 	for _, dbIndex := range dbIndexes {
-		indexes = append(indexes, schema.Index{
+		indexes = append(indexes, driver.Index{
 			Columns: strings.Split(dbIndex.Columns, ","),
 			Name:    strings.ToLower(dbIndex.Name),
 			Type:    strings.ToLower(dbIndex.Type),
@@ -90,7 +90,7 @@ func (r Processor) ProcessIndexes(dbIndexes []schema.DBIndex) []schema.Index {
 	return indexes
 }
 
-func (r Processor) ProcessTypes(types []schema.Type) []schema.Type {
+func (r Processor) ProcessTypes(types []driver.Type) []driver.Type {
 	processType := map[string]string{
 		"b": "base",
 		"c": "composite",
