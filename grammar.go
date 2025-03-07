@@ -303,12 +303,20 @@ func (r *Grammar) CompileLockForUpdate(builder sq.SelectBuilder, conditions *dri
 	return builder
 }
 
-func (r *Grammar) ComplieLockForUpdateForGorm() clause.Expression {
+func (r *Grammar) CompileLockForUpdateForGorm() clause.Expression {
 	return clause.Locking{Strength: "UPDATE"}
 }
 
 func (r *Grammar) CompilePrimary(blueprint driver.Blueprint, command *driver.Command) string {
 	return fmt.Sprintf("alter table %s add primary key (%s)", r.wrap.Table(blueprint.GetTableName()), r.wrap.Columnize(command.Columns))
+}
+
+func (r *Grammar) CompileInRandomOrder(builder sq.SelectBuilder, conditions *driver.Conditions) sq.SelectBuilder {
+	if conditions.InRandomOrder != nil && *conditions.InRandomOrder {
+		conditions.OrderBy = []string{"RANDOM()"}
+	}
+
+	return builder
 }
 
 func (r *Grammar) CompileRandomOrderForGorm() string {
@@ -331,6 +339,14 @@ func (r *Grammar) CompileRenameIndex(_ driver.Schema, _ driver.Blueprint, comman
 	return []string{
 		fmt.Sprintf("alter index %s rename to %s", r.wrap.Column(command.From), r.wrap.Column(command.To)),
 	}
+}
+
+func (r *Grammar) CompileSharedLock(builder sq.SelectBuilder, conditions *driver.Conditions) sq.SelectBuilder {
+	if conditions.SharedLock != nil && *conditions.SharedLock {
+		builder = builder.Suffix("FOR SHARE")
+	}
+
+	return builder
 }
 
 func (r *Grammar) CompileSharedLockForGorm() clause.Expression {
