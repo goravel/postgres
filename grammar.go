@@ -5,7 +5,9 @@ import (
 	"slices"
 	"strings"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/spf13/cast"
+	"gorm.io/gorm/clause"
 
 	"github.com/goravel/framework/contracts/database/driver"
 	"github.com/goravel/framework/database/schema"
@@ -293,8 +295,32 @@ func (r *Grammar) CompileIndexes(schema, table string) (string, error) {
 	), nil
 }
 
+func (r *Grammar) CompileLockForUpdate(builder sq.SelectBuilder, conditions *driver.Conditions) sq.SelectBuilder {
+	if conditions.LockForUpdate != nil && *conditions.LockForUpdate {
+		builder = builder.Suffix("FOR UPDATE")
+	}
+
+	return builder
+}
+
+func (r *Grammar) CompileLockForUpdateForGorm() clause.Expression {
+	return clause.Locking{Strength: "UPDATE"}
+}
+
 func (r *Grammar) CompilePrimary(blueprint driver.Blueprint, command *driver.Command) string {
 	return fmt.Sprintf("alter table %s add primary key (%s)", r.wrap.Table(blueprint.GetTableName()), r.wrap.Columnize(command.Columns))
+}
+
+func (r *Grammar) CompileInRandomOrder(builder sq.SelectBuilder, conditions *driver.Conditions) sq.SelectBuilder {
+	if conditions.InRandomOrder != nil && *conditions.InRandomOrder {
+		conditions.OrderBy = []string{"RANDOM()"}
+	}
+
+	return builder
+}
+
+func (r *Grammar) CompileRandomOrderForGorm() string {
+	return "RANDOM()"
 }
 
 func (r *Grammar) CompileRename(blueprint driver.Blueprint, command *driver.Command) string {
@@ -313,6 +339,18 @@ func (r *Grammar) CompileRenameIndex(_ driver.Schema, _ driver.Blueprint, comman
 	return []string{
 		fmt.Sprintf("alter index %s rename to %s", r.wrap.Column(command.From), r.wrap.Column(command.To)),
 	}
+}
+
+func (r *Grammar) CompileSharedLock(builder sq.SelectBuilder, conditions *driver.Conditions) sq.SelectBuilder {
+	if conditions.SharedLock != nil && *conditions.SharedLock {
+		builder = builder.Suffix("FOR SHARE")
+	}
+
+	return builder
+}
+
+func (r *Grammar) CompileSharedLockForGorm() clause.Expression {
+	return clause.Locking{Strength: "SHARE"}
 }
 
 func (r *Grammar) CompileTables(_ string) string {

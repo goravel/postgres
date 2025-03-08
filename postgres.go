@@ -55,7 +55,7 @@ func (r *Postgres) Config() database.Config {
 }
 
 func (r *Postgres) DB() (*sql.DB, error) {
-	gormDB, _, err := r.Gorm()
+	gormDB, err := r.Gorm()
 	if err != nil {
 		return nil, err
 	}
@@ -76,19 +76,19 @@ func (r *Postgres) Explain(sql string, vars ...any) string {
 	return postgres.New(postgres.Config{}).Explain(sql, vars...)
 }
 
-func (r *Postgres) Gorm() (*gorm.DB, driver.GormQuery, error) {
+func (r *Postgres) Gorm() (*gorm.DB, error) {
 	if r.db != nil {
-		return r.db, NewQuery(), nil
+		return r.db, nil
 	}
 
 	db, err := NewGorm(r.config, r.log).Build()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	r.db = db
 
-	return db, NewQuery(), nil
+	return db, nil
 }
 
 func (r *Postgres) Grammar() driver.Grammar {
@@ -104,7 +104,7 @@ func (r *Postgres) getVersion() string {
 		return r.version
 	}
 
-	instance, _, err := r.Gorm()
+	instance, err := r.Gorm()
 	if err != nil {
 		return ""
 	}
