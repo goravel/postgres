@@ -6,7 +6,7 @@ toolchain go1.24.1
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/goravel/framework v1.15.2-0.20250304093328-f7dce3e28b38
+	github.com/goravel/framework v1.15.2-0.20250308100915-cabc06df5398
 	github.com/spf13/cast v1.7.1
 	github.com/stretchr/testify v1.10.0
 	gorm.io/driver/postgres v1.5.11
@@ -24,7 +24,6 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dromara/carbon/v2 v2.5.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
-	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
@@ -32,6 +31,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/lithammer/fuzzysearch v1.1.8 // indirect
