@@ -327,7 +327,7 @@ func (r *Grammar) CompileRename(blueprint driver.Blueprint, command *driver.Comm
 	return fmt.Sprintf("alter table %s rename to %s", r.wrap.Table(blueprint.GetTableName()), r.wrap.Table(command.To))
 }
 
-func (r *Grammar) CompileRenameColumn(_ driver.Schema, blueprint driver.Blueprint, command *driver.Command) (string, error) {
+func (r *Grammar) CompileRenameColumn(blueprint driver.Blueprint, command *driver.Command, _ []driver.Column) (string, error) {
 	return fmt.Sprintf("alter table %s rename column %s to %s",
 		r.wrap.Table(blueprint.GetTableName()),
 		r.wrap.Column(command.From),
@@ -335,7 +335,7 @@ func (r *Grammar) CompileRenameColumn(_ driver.Schema, blueprint driver.Blueprin
 	), nil
 }
 
-func (r *Grammar) CompileRenameIndex(_ driver.Schema, _ driver.Blueprint, command *driver.Command) []string {
+func (r *Grammar) CompileRenameIndex(blueprint driver.Blueprint, command *driver.Command, _ []driver.Index) []string {
 	return []string{
 		fmt.Sprintf("alter index %s rename to %s", r.wrap.Column(command.From), r.wrap.Column(command.To)),
 	}
