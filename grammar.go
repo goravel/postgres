@@ -307,6 +307,10 @@ func (r *Grammar) CompileLockForUpdateForGorm() clause.Expression {
 	return clause.Locking{Strength: "UPDATE"}
 }
 
+func (r *Grammar) CompilePlaceholderFormat() driver.PlaceholderFormat {
+	return sq.Dollar
+}
+
 func (r *Grammar) CompilePrimary(blueprint driver.Blueprint, command *driver.Command) string {
 	return fmt.Sprintf("alter table %s add primary key (%s)", r.wrap.Table(blueprint.GetTableName()), r.wrap.Columnize(command.Columns))
 }
@@ -402,6 +406,10 @@ func (r *Grammar) CompileUnique(blueprint driver.Blueprint, command *driver.Comm
 	}
 
 	return sql
+}
+
+func (r *Grammar) CompileVersion() string {
+	return "SELECT current_setting('server_version') AS value;"
 }
 
 func (r *Grammar) CompileViews(database string) string {

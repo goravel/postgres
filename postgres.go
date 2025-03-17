@@ -1,10 +1,8 @@
 package postgres
 
 import (
-	"database/sql"
 	"fmt"
 
-	sq "github.com/Masterminds/squirrel"
 	"github.com/goravel/framework/contracts/config"
 	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/database/driver"
@@ -32,37 +30,6 @@ func NewPostgres(config config.Config, log log.Log, connection string) *Postgres
 	}
 }
 
-func (r *Postgres) Config() database.Config {
-	writers := r.config.Writes()
-	if len(writers) == 0 {
-		return database.Config{}
-	}
-
-	return database.Config{
-		Connection:        writers[0].Connection,
-		Dsn:               writers[0].Dsn,
-		Database:          writers[0].Database,
-		Driver:            Name,
-		Host:              writers[0].Host,
-		Password:          writers[0].Password,
-		Port:              writers[0].Port,
-		Prefix:            writers[0].Prefix,
-		Schema:            writers[0].Schema,
-		Username:          writers[0].Username,
-		Version:           r.getVersion(),
-		PlaceholderFormat: sq.Dollar,
-	}
-}
-
-func (r *Postgres) DB() (*sql.DB, error) {
-	gormDB, err := r.Gorm()
-	if err != nil {
-		return nil, err
-	}
-
-	return gormDB.DB()
-}
-
 func (r *Postgres) Docker() (docker.DatabaseDriver, error) {
 	writers := r.config.Writes()
 	if len(writers) == 0 {
@@ -72,51 +39,66 @@ func (r *Postgres) Docker() (docker.DatabaseDriver, error) {
 	return NewDocker(r.config, writers[0].Database, writers[0].Username, writers[0].Password), nil
 }
 
-func (r *Postgres) Explain(sql string, vars ...any) string {
-	return postgres.New(postgres.Config{}).Explain(sql, vars...)
-}
-
-func (r *Postgres) Gorm() (*gorm.DB, error) {
-	if r.db != nil {
-		return r.db, nil
-	}
-
-	db, err := NewGorm(r.config, r.log).Build()
-	if err != nil {
-		return nil, err
-	}
-
-	r.db = db
-
-	return db, nil
-}
-
 func (r *Postgres) Grammar() driver.Grammar {
 	return NewGrammar(r.config.Writes()[0].Prefix)
+}
+
+func (r *Postgres) Pool() database.Pool {
+	return database.Pool{
+		Readers: r.fullConfigsToConfigs(r.config.Reads()),
+		Writers: r.fullConfigsToConfigs(r.config.Writes()),
+	}
 }
 
 func (r *Postgres) Processor() driver.Processor {
 	return NewProcessor()
 }
 
-func (r *Postgres) getVersion() string {
-	if r.version != "" {
-		return r.version
+func (r *Postgres) fullConfigsToConfigs(fullConfigs []contracts.FullConfig) []database.Config {
+	configs := make([]database.Config, len(fullConfigs))
+	for i, fullConfig := range fullConfigs {
+		configs[i] = database.Config{
+			Connection:   fullConfig.Connection,
+			Dsn:          fullConfig.Dsn,
+			Database:     fullConfig.Database,
+			Dialector:    fullConfigToDialector(fullConfig),
+			Driver:       Name,
+			Host:         fullConfig.Host,
+			NameReplacer: fullConfig.NameReplacer,
+			NoLowerCase:  fullConfig.NoLowerCase,
+			Password:     fullConfig.Password,
+			Port:         fullConfig.Port,
+			Prefix:       fullConfig.Prefix,
+			Schema:       fullConfig.Schema,
+			Singular:     fullConfig.Singular,
+			Sslmode:      fullConfig.Sslmode,
+			Timezone:     fullConfig.Timezone,
+			Username:     fullConfig.Username,
+		}
 	}
 
-	instance, err := r.Gorm()
-	if err != nil {
+	return configs
+}
+
+func dsn(fullConfig contracts.FullConfig) string {
+	if fullConfig.Dsn != "" {
+		return fullConfig.Dsn
+	}
+	if fullConfig.Host == "" {
 		return ""
 	}
 
-	var version struct {
-		Value string
-	}
-	if err := instance.Raw("SELECT current_setting('server_version') AS value;").Scan(&version).Error; err != nil {
-		r.version = fmt.Sprintf("UNKNOWN: %s", err)
-	} else {
-		r.version = version.Value
+	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s&timezone=%s&search_path=%s",
+		fullConfig.Username, fullConfig.Password, fullConfig.Host, fullConfig.Port, fullConfig.Database, fullConfig.Sslmode, fullConfig.Timezone, fullConfig.Schema)
+}
+
+func fullConfigToDialector(fullConfig contracts.FullConfig) gorm.Dialector {
+	dsn := dsn(fullConfig)
+	if dsn == "" {
+		return nil
 	}
 
-	return r.version
+	return postgres.New(postgres.Config{
+		DSN: dsn,
+	})
 }
