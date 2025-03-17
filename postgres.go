@@ -17,10 +17,8 @@ import (
 var _ driver.Driver = &Postgres{}
 
 type Postgres struct {
-	config  contracts.ConfigBuilder
-	db      *gorm.DB
-	log     log.Log
-	version string
+	config contracts.ConfigBuilder
+	log    log.Log
 }
 
 func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
@@ -31,7 +29,7 @@ func NewPostgres(config config.Config, log log.Log, connection string) *Postgres
 }
 
 func (r *Postgres) Docker() (docker.DatabaseDriver, error) {
-	writers := r.config.Writes()
+	writers := r.config.Writers()
 	if len(writers) == 0 {
 		return nil, errors.DatabaseConfigNotFound
 	}
@@ -40,13 +38,13 @@ func (r *Postgres) Docker() (docker.DatabaseDriver, error) {
 }
 
 func (r *Postgres) Grammar() driver.Grammar {
-	return NewGrammar(r.config.Writes()[0].Prefix)
+	return NewGrammar(r.config.Writers()[0].Prefix)
 }
 
 func (r *Postgres) Pool() database.Pool {
 	return database.Pool{
-		Readers: r.fullConfigsToConfigs(r.config.Reads()),
-		Writers: r.fullConfigsToConfigs(r.config.Writes()),
+		Readers: r.fullConfigsToConfigs(r.config.Readers()),
+		Writers: r.fullConfigsToConfigs(r.config.Writers()),
 	}
 }
 
