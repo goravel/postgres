@@ -6,12 +6,11 @@ toolchain go1.24.1
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/goravel/framework v1.15.2-0.20250309092812-0d45fdd3fb26
+	github.com/goravel/framework v1.15.2-0.20250318091829-9dd41c701f8b
 	github.com/spf13/cast v1.7.1
 	github.com/stretchr/testify v1.10.0
 	gorm.io/driver/postgres v1.5.11
 	gorm.io/gorm v1.25.12
-	gorm.io/plugin/dbresolver v1.5.3
 )
 
 require (
@@ -22,7 +21,6 @@ require (
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/dromara/carbon/v2 v2.5.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.8 // indirect
 	github.com/gookit/color v1.5.4 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

@@ -32,7 +32,7 @@ func (s *ConfigTestSuite) SetupTest() {
 func (s *ConfigTestSuite) TestReads() {
 	// Test when configs is empty
 	s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.read", s.connection)).Return(nil).Once()
-	s.Nil(s.config.Reads())
+	s.Nil(s.config.Readers())
 
 	// Test when configs is not empty
 	s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.read", s.connection)).Return([]contracts.Config{
@@ -72,7 +72,7 @@ func (s *ConfigTestSuite) TestReads() {
 				Schema:   "public",
 			},
 		},
-	}, s.config.Reads())
+	}, s.config.Readers())
 }
 
 func (s *ConfigTestSuite) TestWrites() {
@@ -112,7 +112,7 @@ func (s *ConfigTestSuite) TestWrites() {
 					Schema:   "public",
 				},
 			},
-		}, s.config.Writes())
+		}, s.config.Writers())
 	})
 
 	s.Run("success when configs is not empty", func() {
@@ -154,7 +154,7 @@ func (s *ConfigTestSuite) TestWrites() {
 					Schema:   "public",
 				},
 			},
-		}, s.config.Writes())
+		}, s.config.Writers())
 	})
 }
 
