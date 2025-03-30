@@ -50,11 +50,11 @@ import (
         "timezone": "UTC", // Asia/Shanghai
         "singular": false,
         "prefix":   "",
-        "schema":   "",
         "via": func() (driver.Driver, error) {
             return postgresfacades.Postgres("postgres")
         },
         // Optional
+        "schema": "public",
         "dsn": "",
         "read": []contracts.Config{
             {Host: "192.168.1.1", Port: 3306, Database: "forge", Username: "root", Password: "123123"},
