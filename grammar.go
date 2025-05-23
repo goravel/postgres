@@ -36,6 +36,8 @@ func NewGrammar(prefix string) *Grammar {
 		grammar.ModifyDefault,
 		grammar.ModifyIncrement,
 		grammar.ModifyNullable,
+		grammar.ModifyGeneratedAsForChange,
+		grammar.ModifyGeneratedAs,
 	}
 
 	return grammar
@@ -435,9 +437,9 @@ func (r *Grammar) GetAttributeCommands() []string {
 	return r.attributeCommands
 }
 
-func (r *Grammar) ModifyDefault(blueprint driver.Blueprint, column driver.ColumnDefinition) string {
+func (r *Grammar) ModifyDefault(_ driver.Blueprint, column driver.ColumnDefinition) string {
 	if column.IsChange() {
-		if column.GetAutoIncrement() {
+		if column.GetAutoIncrement() || column.IsSetGeneratedAs() {
 			return ""
 		}
 		if column.GetDefault() != nil {
@@ -452,7 +454,39 @@ func (r *Grammar) ModifyDefault(blueprint driver.Blueprint, column driver.Column
 	return ""
 }
 
-func (r *Grammar) ModifyNullable(blueprint driver.Blueprint, column driver.ColumnDefinition) string {
+func (r *Grammar) ModifyGeneratedAs(_ driver.Blueprint, column driver.ColumnDefinition) string {
+	if !column.IsSetGeneratedAs() {
+		return ""
+	}
+
+	option := "by default"
+	if column.IsAlways() {
+		option = "always"
+	}
+
+	identity := ""
+	if generatedAs := column.GetGeneratedAs(); len(generatedAs) > 0 {
+		identity = " (" + generatedAs + ")"
+	}
+
+	sql := fmt.Sprintf(" generated %s as identity%s", option, identity)
+	if column.IsChange() {
+		sql = " add" + sql
+	}
+
+	return sql
+
+}
+
+func (r *Grammar) ModifyGeneratedAsForChange(_ driver.Blueprint, column driver.ColumnDefinition) string {
+	if column.IsChange() && column.IsSetGeneratedAs() && !column.GetAutoIncrement() {
+		return " drop identity if exists"
+	}
+
+	return ""
+}
+
+func (r *Grammar) ModifyNullable(_ driver.Blueprint, column driver.ColumnDefinition) string {
 	if column.IsChange() {
 		if column.GetNullable() {
 			return " drop not null"
@@ -466,7 +500,10 @@ func (r *Grammar) ModifyNullable(blueprint driver.Blueprint, column driver.Colum
 }
 
 func (r *Grammar) ModifyIncrement(blueprint driver.Blueprint, column driver.ColumnDefinition) string {
-	if !column.IsChange() && !blueprint.HasCommand("primary") && slices.Contains(r.serials, column.GetType()) && column.GetAutoIncrement() {
+	if !column.IsChange() &&
+		!blueprint.HasCommand("primary") &&
+		(slices.Contains(r.serials, column.GetType()) || column.IsSetGeneratedAs()) &&
+		column.GetAutoIncrement() {
 		return " primary key"
 	}
 
@@ -474,7 +511,7 @@ func (r *Grammar) ModifyIncrement(blueprint driver.Blueprint, column driver.Colu
 }
 
 func (r *Grammar) TypeBigInteger(column driver.ColumnDefinition) string {
-	if column.GetAutoIncrement() {
+	if column.GetAutoIncrement() && !column.IsChange() && !column.IsSetGeneratedAs() {
 		return "bigserial"
 	}
 
@@ -528,7 +565,7 @@ func (r *Grammar) TypeFloat(column driver.ColumnDefinition) string {
 }
 
 func (r *Grammar) TypeInteger(column driver.ColumnDefinition) string {
-	if column.GetAutoIncrement() {
+	if column.GetAutoIncrement() && !column.IsChange() && !column.IsSetGeneratedAs() {
 		return "serial"
 	}
 
@@ -556,7 +593,7 @@ func (r *Grammar) TypeMediumText(column driver.ColumnDefinition) string {
 }
 
 func (r *Grammar) TypeSmallInteger(column driver.ColumnDefinition) string {
-	if column.GetAutoIncrement() {
+	if column.GetAutoIncrement() && !column.IsChange() && !column.IsSetGeneratedAs() {
 		return "smallserial"
 	}
 
