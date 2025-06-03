@@ -9,7 +9,7 @@ require (
 	github.com/goravel/framework v1.15.2-0.20250523025922-88c15e8bda02
 	github.com/spf13/cast v1.9.1
 	github.com/stretchr/testify v1.10.0
-	gorm.io/driver/postgres v1.5.11
+	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.0
 )
 
