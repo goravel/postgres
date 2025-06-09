@@ -6,7 +6,7 @@ toolchain go1.24.4
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
-	github.com/goravel/framework v1.15.2-0.20250609081116-6ecd2b376447
+	github.com/goravel/framework v1.15.2-0.20250609104359-90480ea9b358
 	github.com/spf13/cast v1.9.2
 	github.com/stretchr/testify v1.10.0
 	gorm.io/driver/postgres v1.6.0
