@@ -1,16 +1,18 @@
 package postgres
 
 import (
+	"encoding/json"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 
 	contractsdriver "github.com/goravel/framework/contracts/database/driver"
 	"github.com/goravel/framework/database/schema"
 	"github.com/goravel/framework/errors"
 	mocksdriver "github.com/goravel/framework/mocks/database/driver"
+	mocksfoundation "github.com/goravel/framework/mocks/foundation"
 	"github.com/goravel/framework/support/convert"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/suite"
 )
 
 type GrammarSuite struct {
@@ -333,6 +335,153 @@ func (s *GrammarSuite) TestCompileIndex() {
 
 			sql := s.grammar.CompileIndex(mockBlueprint, test.command)
 			s.Equal(test.expectSql, sql)
+		})
+	}
+}
+
+func (s *GrammarSuite) TestCompileJsonContains() {
+	tests := []struct {
+		name          string
+		column        string
+		value         any
+		isNot         bool
+		expectedSql   string
+		expectedValue []any
+		hasError      bool
+	}{
+		{
+			name:     "invalid value type",
+			column:   "data->details",
+			value:    func() {},
+			hasError: true,
+		},
+		{
+			name:          "single path with single value",
+			column:        "data->details",
+			value:         "value1",
+			expectedSql:   `("data"->'details')::jsonb @> ?`,
+			expectedValue: []any{`"value1"`},
+		},
+		{
+			name:          "single path with multiple values",
+			column:        "data->details",
+			value:         []string{"value1", "value2"},
+			expectedSql:   `("data"->'details')::jsonb @> ?`,
+			expectedValue: []any{`["value1","value2"]`},
+		},
+		{
+			name:          "nested path with single value",
+			column:        "data->details->subdetails[0]",
+			value:         "value1",
+			expectedSql:   `("data"->'details'->'subdetails'->0)::jsonb @> ?`,
+			expectedValue: []any{`"value1"`},
+		},
+		{
+			name:          "nested path with multiple values",
+			column:        "data->details[0]->subdetails",
+			value:         []string{"value1", "value2"},
+			expectedSql:   `("data"->'details'->0->'subdetails')::jsonb @> ?`,
+			expectedValue: []any{`["value1","value2"]`},
+		},
+		{
+			name:          "with is not condition",
+			column:        "data->details",
+			value:         "value1",
+			isNot:         true,
+			expectedSql:   `not ("data"->'details')::jsonb @> ?`,
+			expectedValue: []any{`"value1"`},
+		},
+	}
+
+	mockApp := mocksfoundation.NewApplication(s.T())
+	mockJson := mocksfoundation.NewJson(s.T())
+	originApp := App
+	App = mockApp
+	s.T().Cleanup(func() {
+		App = originApp
+	})
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			mockJson.EXPECT().Marshal(mock.Anything).RunAndReturn(func(i interface{}) ([]byte, error) {
+				return json.Marshal(tt.value)
+			}).Once()
+			mockApp.EXPECT().GetJson().Return(mockJson).Once()
+			actualSql, actualValue, err := s.grammar.CompileJsonContains(tt.column, tt.value, tt.isNot)
+			if tt.hasError {
+				s.Error(err)
+			} else {
+				s.Equal(tt.expectedSql, actualSql)
+				s.Equal(tt.expectedValue, actualValue)
+				s.NoError(err)
+			}
+		})
+	}
+}
+
+func (s *GrammarSuite) TestCompileJsonContainKey() {
+	tests := []struct {
+		name        string
+		column      string
+		isNot       bool
+		expectedSql string
+	}{
+		{
+			name:        "single path",
+			column:      "data->details",
+			expectedSql: `coalesce(("data")::jsonb ? 'details', false)`,
+		},
+		{
+			name:        "single path with is not",
+			column:      "data->details",
+			isNot:       true,
+			expectedSql: `not coalesce(("data")::jsonb ? 'details', false)`,
+		},
+		{
+			name:        "nested path",
+			column:      "data->details->subdetails",
+			expectedSql: `coalesce(("data"->'details')::jsonb ? 'subdetails', false)`,
+		},
+		{
+			name:        "nested path with array index",
+			column:      "data->details[0]->subdetails",
+			expectedSql: `coalesce(("data"->'details'->0)::jsonb ? 'subdetails', false)`,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.expectedSql, s.grammar.CompileJsonContainsKey(tt.column, tt.isNot))
+		})
+	}
+}
+
+func (s *GrammarSuite) TestCompileJsonLength() {
+	tests := []struct {
+		name        string
+		column      string
+		expectedSql string
+	}{
+		{
+			name:        "single path",
+			column:      "data->details",
+			expectedSql: `jsonb_array_length(("data"->'details')::jsonb)`,
+		},
+		{
+			name:        "nested path",
+			column:      "data->details->subdetails",
+			expectedSql: `jsonb_array_length(("data"->'details'->'subdetails')::jsonb)`,
+		},
+		{
+			name:        "nested path with array index",
+			column:      "data->details[0]->subdetails",
+			expectedSql: `jsonb_array_length(("data"->'details'->0->'subdetails')::jsonb)`,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.expectedSql, s.grammar.CompileJsonLength(tt.column))
 		})
 	}
 }
