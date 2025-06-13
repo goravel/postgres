@@ -2,17 +2,18 @@ package postgres
 
 import (
 	"fmt"
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/spf13/cast"
-	"gorm.io/gorm/clause"
-
 	"github.com/goravel/framework/contracts/database/driver"
 	"github.com/goravel/framework/database/schema"
 	"github.com/goravel/framework/errors"
 	"github.com/goravel/framework/support/collect"
+	"github.com/spf13/cast"
+	"gorm.io/gorm/clause"
 )
 
 var _ driver.Grammar = &Grammar{}
@@ -295,6 +296,67 @@ func (r *Grammar) CompileIndexes(schema, table string) (string, error) {
 		r.wrap.Quote(table),
 		r.wrap.Quote(schema),
 	), nil
+}
+
+func (r *Grammar) CompileJsonContains(column string, value any, isNot bool) (string, []any, error) {
+	column = strings.Replace(r.CompileJsonSelector(column), "->>", "->", -1)
+	binding, err := App.GetJson().Marshal(value)
+	if err != nil {
+		return column, nil, err
+	}
+
+	return r.wrap.Not(fmt.Sprintf("(%s)::jsonb @> ?", column), isNot), []any{string(binding)}, nil
+}
+
+func (r *Grammar) CompileJsonContainsKey(column string, isNot bool) string {
+	segments := strings.Split(column, "->")
+	lastSegment := segments[len(segments)-1]
+	segments = segments[:len(segments)-1]
+
+	var jsonArrayIndex string
+	if _, err := strconv.Atoi(lastSegment); err == nil {
+		jsonArrayIndex = lastSegment
+	} else if matches := regexp.MustCompile(`\[(-?[0-9]+)]$`).FindStringSubmatch(lastSegment); len(matches) == 2 {
+		segments = append(segments, strings.TrimSuffix(lastSegment, matches[0]))
+		jsonArrayIndex = matches[1]
+	}
+
+	column = strings.Replace(r.CompileJsonSelector(strings.Join(segments, "->")), "->>", "->", -1)
+	if len(jsonArrayIndex) > 0 {
+		index := cast.ToInt(jsonArrayIndex)
+		if index < 0 {
+			index = -index
+		} else {
+			index = index + 1
+		}
+		return r.wrap.Not(fmt.Sprintf("case when %s then %s else false end",
+			fmt.Sprintf("jsonb_typeof((%s)::jsonb) = 'array'", column),
+			fmt.Sprintf("jsonb_array_length((%s)::jsonb) >= %d", column, index),
+		), isNot)
+	}
+
+	return r.wrap.Not(fmt.Sprintf("coalesce((%s)::jsonb ? %s, false)", column, r.wrap.Quote(strings.ReplaceAll(lastSegment, "'", "''"))), isNot)
+}
+
+func (r *Grammar) CompileJsonLength(column string) string {
+	column = strings.Replace(r.CompileJsonSelector(column), "->>", "->", -1)
+
+	return fmt.Sprintf("jsonb_array_length((%s)::jsonb)", column)
+}
+
+func (r *Grammar) CompileJsonSelector(column string) string {
+	path := strings.Split(column, "->")
+	field := r.wrap.Column(path[0])
+	if len(path) == 1 {
+		return field
+	}
+
+	wrappedPath := r.wrap.JsonPathAttributes(path[1:])
+	if len(wrappedPath) > 1 {
+		return field + "->" + strings.Join(wrappedPath[:len(wrappedPath)-1], "->") + "->>" + wrappedPath[len(wrappedPath)-1]
+	}
+
+	return field + "->>" + wrappedPath[0]
 }
 
 func (r *Grammar) CompileLockForUpdate(builder sq.SelectBuilder, conditions *driver.Conditions) sq.SelectBuilder {
