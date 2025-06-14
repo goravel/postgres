@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"slices"
 	"strconv"
@@ -357,6 +358,37 @@ func (r *Grammar) CompileJsonSelector(column string) string {
 	}
 
 	return field + "->>" + wrappedPath[0]
+}
+
+func (r *Grammar) CompileJsonValues(args ...any) []any {
+	for i, arg := range args {
+		val := reflect.ValueOf(arg)
+		if val.Kind() == reflect.Ptr {
+			if val.IsNil() {
+				continue
+			}
+			val = val.Elem()
+		}
+		switch val.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Float32, reflect.Float64, reflect.Bool:
+			args[i] = fmt.Sprint(val.Interface())
+
+		case reflect.Slice, reflect.Array:
+			if length := val.Len(); length > 0 {
+				values := make([]any, length)
+				for j := 0; j < length; j++ {
+					values[j] = val.Index(j).Interface()
+				}
+				args[i] = r.CompileJsonValues(values...)
+			}
+		default:
+
+		}
+
+	}
+	return args
 }
 
 func (r *Grammar) CompileLockForUpdate(builder sq.SelectBuilder, conditions *driver.Conditions) sq.SelectBuilder {

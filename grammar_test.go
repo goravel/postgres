@@ -486,6 +486,46 @@ func (s *GrammarSuite) TestCompileJsonLength() {
 	}
 }
 
+func (s *GrammarSuite) TestCompileJsonValues() {
+	tests := []struct {
+		name     string
+		args     []any
+		expected []any
+	}{
+		{
+			name:     "number values",
+			args:     []any{1},
+			expected: []any{"1"},
+		},
+		{
+			name:     "number values",
+			args:     []any{[]int{1, 2, 3}},
+			expected: []any{[]any{"1", "2", "3"}},
+		},
+		{
+			name:     "string values",
+			args:     []any{"value1", "value2", "value3"},
+			expected: []any{"value1", "value2", "value3"},
+		},
+		{
+			name:     "boolean values",
+			args:     []any{true, false},
+			expected: []any{"true", "false"},
+		},
+		{
+			name:     "pointer values",
+			args:     []any{convert.Pointer(123)},
+			expected: []any{"123"},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Equal(tt.expected, s.grammar.CompileJsonValues(tt.args...))
+		})
+	}
+}
+
 func (s *GrammarSuite) TestCompilePrimary() {
 	mockBlueprint := mocksdriver.NewBlueprint(s.T())
 	mockBlueprint.EXPECT().GetTableName().Return("users").Once()
