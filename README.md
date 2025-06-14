@@ -47,7 +47,6 @@ import (
         "username": config.Env("DB_USERNAME", ""),
         "password": config.Env("DB_PASSWORD", ""),
         "sslmode":  "disable",
-        "timezone": "UTC", // Asia/Shanghai
         "singular": false,
         "prefix":   "",
         "via": func() (driver.Driver, error) {

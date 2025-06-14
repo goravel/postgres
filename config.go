@@ -62,7 +62,6 @@ func (r *Config) fillDefault(configs []contracts.Config) []contracts.FullConfig 
 			Prefix:      r.config.GetString(fmt.Sprintf("database.connections.%s.prefix", r.connection)),
 			Singular:    r.config.GetBool(fmt.Sprintf("database.connections.%s.singular", r.connection)),
 			Sslmode:     r.config.GetString(fmt.Sprintf("database.connections.%s.sslmode", r.connection)),
-			Timezone:    r.config.GetString(fmt.Sprintf("database.connections.%s.timezone", r.connection)),
 		}
 		if nameReplacer := r.config.Get(fmt.Sprintf("database.connections.%s.name_replacer", r.connection)); nameReplacer != nil {
 			if replacer, ok := nameReplacer.(contracts.Replacer); ok {
@@ -91,6 +90,13 @@ func (r *Config) fillDefault(configs []contracts.Config) []contracts.FullConfig 
 		}
 		if fullConfig.Database == "" {
 			fullConfig.Database = r.config.GetString(fmt.Sprintf("database.connections.%s.database", r.connection))
+		}
+		if fullConfig.Timezone == "" {
+			timezone := r.config.GetString(fmt.Sprintf("database.connections.%s.timezone", r.connection))
+			if timezone == "" {
+				timezone = r.config.GetString("app.timezone", "UTC")
+			}
+			fullConfig.Timezone = timezone
 		}
 		fullConfigs = append(fullConfigs, fullConfig)
 	}

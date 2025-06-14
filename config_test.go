@@ -266,6 +266,50 @@ func (s *ConfigTestSuite) TestFillDefault() {
 				},
 			},
 		},
+		{
+			name: "success with app.timezone",
+			configs: []contracts.Config{
+				{
+					Dsn:      dsn,
+					Host:     host,
+					Port:     port,
+					Database: database,
+					Username: username,
+					Password: password,
+				},
+			},
+			setup: func() {
+				s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.prefix", s.connection)).Return(prefix).Once()
+				s.mockConfig.EXPECT().GetBool(fmt.Sprintf("database.connections.%s.singular", s.connection)).Return(singular).Once()
+				s.mockConfig.EXPECT().GetBool(fmt.Sprintf("database.connections.%s.no_lower_case", s.connection)).Return(true).Once()
+				s.mockConfig.EXPECT().Get(fmt.Sprintf("database.connections.%s.name_replacer", s.connection)).Return(nameReplacer).Once()
+				s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.sslmode", s.connection)).Return(sslmode).Once()
+				s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.timezone", s.connection)).Return("").Once()
+				s.mockConfig.EXPECT().GetString("app.timezone", "UTC").Return(timezone).Once()
+				s.mockConfig.EXPECT().GetString(fmt.Sprintf("database.connections.%s.schema", s.connection), "public").Return(schema).Once()
+			},
+			expectConfigs: []contracts.FullConfig{
+				{
+					Connection:   s.connection,
+					Driver:       Name,
+					Prefix:       prefix,
+					Singular:     singular,
+					Sslmode:      sslmode,
+					Timezone:     timezone,
+					NoLowerCase:  true,
+					NameReplacer: nameReplacer,
+					Config: contracts.Config{
+						Dsn:      dsn,
+						Database: database,
+						Host:     host,
+						Port:     port,
+						Username: username,
+						Password: password,
+						Schema:   schema,
+					},
+				},
+			},
+		},
 	}
 
 	for _, test := range tests {
