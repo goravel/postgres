@@ -10,6 +10,7 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/goravel/framework/contracts/database/driver"
+	databasedb "github.com/goravel/framework/database/db"
 	"github.com/goravel/framework/database/schema"
 	"github.com/goravel/framework/errors"
 	"github.com/goravel/framework/support/collect"
@@ -297,6 +298,39 @@ func (r *Grammar) CompileIndexes(schema, table string) (string, error) {
 		r.wrap.Quote(table),
 		r.wrap.Quote(schema),
 	), nil
+}
+
+func (r *Grammar) CompileJsonColumnsUpdate(values map[string]any) (map[string]any, error) {
+	var (
+		compiled = make(map[string]any)
+		json     = App.GetJson()
+	)
+
+	for key, value := range values {
+		if strings.Contains(key, "->") {
+			segments := strings.Split(key, "->")
+			column := segments[0]
+			path := "{" + strings.Join(r.wrap.JsonPathAttributes(segments[1:], `"`), ",") + "}"
+
+			binding, err := json.Marshal(value)
+			if err != nil {
+				return nil, err
+			}
+
+			expr, ok := compiled[column]
+			if !ok {
+				expr = databasedb.Raw(r.wrap.Column(column) + "::jsonb")
+			}
+
+			compiled[column] = databasedb.Raw("jsonb_set(?,?,?)", expr, path, string(binding))
+
+			continue
+		}
+
+		compiled[key] = value
+	}
+
+	return compiled, nil
 }
 
 func (r *Grammar) CompileJsonContains(column string, value any, isNot bool) (string, []any, error) {
