@@ -31,7 +31,7 @@ func main() {
 		Install(
 			modify.GoFile(path.Config("app.go")).
 				Find(match.Imports()).Modify(modify.AddImport(packages.GetModulePath())).
-				Find(match.Providers()).Modify(modify.Register("&postgres.ServiceProvider{}", "&queue.ServiceProvider{}")),
+				Find(match.Providers()).Modify(modify.Register("&postgres.ServiceProvider{}", "&database.ServiceProvider{}")),
 			modify.GoFile(path.Config("database.go")).
 				Find(match.Imports()).Modify(modify.AddImport("github.com/goravel/framework/contracts/database/driver"), modify.AddImport("github.com/goravel/postgres/facades", "postgresfacades")).
 				Find(match.Config("database.connections")).Modify(modify.AddConfig("postgres", config)),
