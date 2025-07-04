@@ -16,14 +16,13 @@ var config = `map[string]any{
         "username": config.Env("DB_USERNAME", ""),
         "password": config.Env("DB_PASSWORD", ""),
         "sslmode":  "disable",
-        "timezone": "UTC", // Asia/Shanghai
         "singular": false,
         "prefix":   "",
+        "schema":   config.Env("DB_SCHEMA", "public"),
         "via": func() (driver.Driver, error) {
             return postgresfacades.Postgres("postgres")
         },
-        // Optional
-        "schema":   config.Env("DB_SCHEMA", "public"),
+
     }`
 
 func main() {
