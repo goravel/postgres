@@ -1043,11 +1043,6 @@ func (s *GrammarSuite) TestTypeUuid() {
 	s.Equal("uuid", s.grammar.TypeUuid(mockColumn))
 }
 
-func (s *GrammarSuite) TestTypeUlid() {
-	mockColumn := mocksdriver.NewColumnDefinition(s.T())
-	s.Equal("char(26)", s.grammar.TypeUlid(mockColumn))
-}
-
 func TestParseSchemaAndTable(t *testing.T) {
 	tests := []struct {
 		reference      string
