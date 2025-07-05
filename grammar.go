@@ -777,6 +777,10 @@ func (r *Grammar) TypeTinyText(column driver.ColumnDefinition) string {
 	return "varchar(255)"
 }
 
+func (r *Grammar) TypeUuid(column driver.ColumnDefinition) string {
+	return "uuid"
+}
+
 func (r *Grammar) getColumns(blueprint driver.Blueprint) []string {
 	var columns []string
 	for _, column := range blueprint.GetAddedColumns() {

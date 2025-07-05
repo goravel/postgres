@@ -1038,6 +1038,11 @@ func (s *GrammarSuite) TestTypeTimestampTz() {
 	s.Equal("timestamp(3) with time zone", s.grammar.TypeTimestampTz(mockColumn))
 }
 
+func (s *GrammarSuite) TestTypeUuid() {
+	mockColumn := mocksdriver.NewColumnDefinition(s.T())
+	s.Equal("uuid", s.grammar.TypeUuid(mockColumn))
+}
+
 func TestParseSchemaAndTable(t *testing.T) {
 	tests := []struct {
 		reference      string
