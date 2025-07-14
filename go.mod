@@ -2,7 +2,7 @@ module github.com/goravel/postgres
 
 go 1.23.0
 
-toolchain go1.24.4
+toolchain go1.24.5
 
 require (
 	github.com/Masterminds/squirrel v1.5.4
