@@ -334,7 +334,7 @@ func (r *Grammar) CompileJsonColumnsUpdate(values map[string]any) (map[string]an
 }
 
 func (r *Grammar) CompileJsonContains(column string, value any, isNot bool) (string, []any, error) {
-	column = strings.Replace(r.CompileJsonSelector(column), "->>", "->", -1)
+	column = strings.ReplaceAll(r.CompileJsonSelector(column), "->>", "->")
 	binding, err := App.GetJson().Marshal(value)
 	if err != nil {
 		return column, nil, err
@@ -356,7 +356,7 @@ func (r *Grammar) CompileJsonContainsKey(column string, isNot bool) string {
 		jsonArrayIndex = matches[1]
 	}
 
-	column = strings.Replace(r.CompileJsonSelector(strings.Join(segments, "->")), "->>", "->", -1)
+	column = strings.ReplaceAll(r.CompileJsonSelector(strings.Join(segments, "->")), "->>", "->")
 	if len(jsonArrayIndex) > 0 {
 		index := cast.ToInt(jsonArrayIndex)
 		if index < 0 {
@@ -374,7 +374,7 @@ func (r *Grammar) CompileJsonContainsKey(column string, isNot bool) string {
 }
 
 func (r *Grammar) CompileJsonLength(column string) string {
-	column = strings.Replace(r.CompileJsonSelector(column), "->>", "->", -1)
+	column = strings.ReplaceAll(r.CompileJsonSelector(column), "->>", "->")
 
 	return fmt.Sprintf("jsonb_array_length((%s)::jsonb)", column)
 }
