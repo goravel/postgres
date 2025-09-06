@@ -98,5 +98,9 @@ func fullConfigToDialector(fullConfig contracts.FullConfig) gorm.Dialector {
 
 	return postgres.New(postgres.Config{
 		DSN: dsn,
+		// When running a migration to add or remove columns, the driver will panic with cached plan must not change result type.
+		// So PreferSimpleProtocol should be set to true to avoid this issue. The performance will down a little bit,
+		// but it's worth to provide a fully migration support.
+		PreferSimpleProtocol: true,
 	})
 }
