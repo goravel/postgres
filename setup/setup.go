@@ -46,12 +46,12 @@ func main() {
 				modify.AddImport(postgresFacades, "postgresfacades"),
 			).
 				Find(match.Config("database.connections")).Modify(modify.AddConfig("postgres", config)).
-				Find(match.Config("http")).Modify(modify.AddConfig("default", `"gin"`)),
+				Find(match.Config("database")).Modify(modify.AddConfig("default", `"postgres"`)),
 		).
 		Uninstall(
 			// Remove postgres connection from database.go
 			modify.GoFile(databaseConfigPath).
-				Find(match.Config("http")).Modify(modify.AddConfig("default", `""`)).
+				Find(match.Config("database")).Modify(modify.AddConfig("default", `""`)).
 				Find(match.Config("database.connections")).Modify(modify.RemoveConfig("postgres")).
 				Find(match.Imports()).Modify(
 				modify.RemoveImport(driverContract),
