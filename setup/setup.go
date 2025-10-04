@@ -26,22 +26,42 @@ var config = `map[string]any{
     }`
 
 func main() {
+	appConfigPath := path.Config("app.go")
+	databaseConfigPath := path.Config("database.go")
+	modulePath := packages.GetModulePath()
+	postgresServiceProvider := "&postgres.ServiceProvider{}"
+	driverContract := "github.com/goravel/framework/contracts/database/driver"
+	postgresFacades := "github.com/goravel/postgres/facades"
+
 	packages.Setup(os.Args).
 		Install(
-			modify.GoFile(path.Config("app.go")).
-				Find(match.Imports()).Modify(modify.AddImport(packages.GetModulePath())).
-				Find(match.Providers()).Modify(modify.Register("&postgres.ServiceProvider{}", "&database.ServiceProvider{}")),
-			modify.GoFile(path.Config("database.go")).
-				Find(match.Imports()).Modify(modify.AddImport("github.com/goravel/framework/contracts/database/driver"), modify.AddImport("github.com/goravel/postgres/facades", "postgresfacades")).
-				Find(match.Config("database.connections")).Modify(modify.AddConfig("postgres", config)),
+			// Add postgres service provider to app.go
+			modify.GoFile(appConfigPath).
+				Find(match.Imports()).Modify(modify.AddImport(modulePath)).
+				Find(match.Providers()).Modify(modify.Register(postgresServiceProvider)),
+
+			// Add postgres connection to database.go
+			modify.GoFile(databaseConfigPath).Find(match.Imports()).Modify(
+				modify.AddImport(driverContract),
+				modify.AddImport(postgresFacades, "postgresfacades"),
+			).
+				Find(match.Config("database.connections")).Modify(modify.AddConfig("postgres", config)).
+				Find(match.Config("http")).Modify(modify.AddConfig("default", `"gin"`)),
 		).
 		Uninstall(
-			modify.GoFile(path.Config("app.go")).
-				Find(match.Providers()).Modify(modify.Unregister("&postgres.ServiceProvider{}")).
-				Find(match.Imports()).Modify(modify.RemoveImport(packages.GetModulePath())),
-			modify.GoFile(path.Config("database.go")).
+			// Remove postgres connection from database.go
+			modify.GoFile(databaseConfigPath).
+				Find(match.Config("http")).Modify(modify.AddConfig("default", `""`)).
 				Find(match.Config("database.connections")).Modify(modify.RemoveConfig("postgres")).
-				Find(match.Imports()).Modify(modify.RemoveImport("github.com/goravel/framework/contracts/database/driver"), modify.RemoveImport("github.com/goravel/postgres/facades", "postgresfacades")),
+				Find(match.Imports()).Modify(
+				modify.RemoveImport(driverContract),
+				modify.RemoveImport(postgresFacades, "postgresfacades"),
+			),
+
+			// Remove postgres service provider from app.go
+			modify.GoFile(appConfigPath).
+				Find(match.Providers()).Modify(modify.Unregister(postgresServiceProvider)).
+				Find(match.Imports()).Modify(modify.RemoveImport(modulePath)),
 		).
 		Execute()
 }
