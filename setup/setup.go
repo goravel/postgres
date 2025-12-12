@@ -11,6 +11,7 @@ import (
 )
 
 func main() {
+	setup := packages.Setup(os.Args)
 	config := `map[string]any{
         "host":     config.Env("DB_HOST", "127.0.0.1"),
         "port":     config.Env("DB_PORT", 5432),
@@ -29,56 +30,53 @@ func main() {
 
 	appConfigPath := path.Config("app.go")
 	databaseConfigPath := path.Config("database.go")
-	modulePath := packages.GetModulePath()
+	moduleImport := setup.Paths().Module().Import()
 	postgresServiceProvider := "&postgres.ServiceProvider{}"
 	driverContract := "github.com/goravel/framework/contracts/database/driver"
 	postgresFacades := "github.com/goravel/postgres/facades"
 	databaseConnectionsConfig := match.Config("database.connections")
 	databaseConfig := match.Config("database")
 
-	packages.Setup(os.Args).
-		Install(
-			// Add postgres service provider to app.go if not using bootstrap setup
-			modify.When(func(_ map[string]any) bool {
-				return !env.IsBootstrapSetup()
-			}, modify.GoFile(appConfigPath).
-				Find(match.Imports()).Modify(modify.AddImport(modulePath)).
-				Find(match.Providers()).Modify(modify.Register(postgresServiceProvider))),
+	setup.Install(
+		// Add postgres service provider to app.go if not using bootstrap setup
+		modify.When(func(_ map[string]any) bool {
+			return !env.IsBootstrapSetup()
+		}, modify.GoFile(appConfigPath).
+			Find(match.Imports()).Modify(modify.AddImport(moduleImport)).
+			Find(match.Providers()).Modify(modify.Register(postgresServiceProvider))),
 
-			// Add postgres service provider to providers.go if using bootstrap setup
-			modify.When(func(_ map[string]any) bool {
-				return env.IsBootstrapSetup()
-			}, modify.AddProviderApply(modulePath, postgresServiceProvider)),
+		// Add postgres service provider to providers.go if using bootstrap setup
+		modify.When(func(_ map[string]any) bool {
+			return env.IsBootstrapSetup()
+		}, modify.AddProviderApply(moduleImport, postgresServiceProvider)),
 
-			// Add postgres connection to database.go
-			modify.GoFile(databaseConfigPath).Find(match.Imports()).Modify(
-				modify.AddImport(driverContract),
-				modify.AddImport(postgresFacades, "postgresfacades"),
-			).
-				Find(databaseConnectionsConfig).Modify(modify.AddConfig("postgres", config)).
-				Find(databaseConfig).Modify(modify.AddConfig("default", `"postgres"`)),
+		// Add postgres connection to database.go
+		modify.GoFile(databaseConfigPath).Find(match.Imports()).Modify(
+			modify.AddImport(driverContract),
+			modify.AddImport(postgresFacades, "postgresfacades"),
 		).
-		Uninstall(
-			// Remove postgres connection from database.go
-			modify.GoFile(databaseConfigPath).
-				Find(databaseConfig).Modify(modify.AddConfig("default", `""`)).
-				Find(databaseConnectionsConfig).Modify(modify.RemoveConfig("postgres")).
-				Find(match.Imports()).Modify(
-				modify.RemoveImport(driverContract),
-				modify.RemoveImport(postgresFacades, "postgresfacades"),
-			),
+			Find(databaseConnectionsConfig).Modify(modify.AddConfig("postgres", config)).
+			Find(databaseConfig).Modify(modify.AddConfig("default", `"postgres"`)),
+	).Uninstall(
+		// Remove postgres connection from database.go
+		modify.GoFile(databaseConfigPath).
+			Find(databaseConfig).Modify(modify.AddConfig("default", `""`)).
+			Find(databaseConnectionsConfig).Modify(modify.RemoveConfig("postgres")).
+			Find(match.Imports()).Modify(
+			modify.RemoveImport(driverContract),
+			modify.RemoveImport(postgresFacades, "postgresfacades"),
+		),
 
-			// Remove postgres service provider from app.go if not using bootstrap setup
-			modify.When(func(_ map[string]any) bool {
-				return !env.IsBootstrapSetup()
-			}, modify.GoFile(appConfigPath).
-				Find(match.Providers()).Modify(modify.Unregister(postgresServiceProvider)).
-				Find(match.Imports()).Modify(modify.RemoveImport(modulePath))),
+		// Remove postgres service provider from app.go if not using bootstrap setup
+		modify.When(func(_ map[string]any) bool {
+			return !env.IsBootstrapSetup()
+		}, modify.GoFile(appConfigPath).
+			Find(match.Providers()).Modify(modify.Unregister(postgresServiceProvider)).
+			Find(match.Imports()).Modify(modify.RemoveImport(moduleImport))),
 
-			// Remove postgres service provider from providers.go if using bootstrap setup
-			modify.When(func(_ map[string]any) bool {
-				return env.IsBootstrapSetup()
-			}, modify.RemoveProviderApply(modulePath, postgresServiceProvider)),
-		).
-		Execute()
+		// Remove postgres service provider from providers.go if using bootstrap setup
+		modify.When(func(_ map[string]any) bool {
+			return env.IsBootstrapSetup()
+		}, modify.RemoveProviderApply(moduleImport, postgresServiceProvider)),
+	).Execute()
 }
