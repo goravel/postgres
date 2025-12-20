@@ -59,13 +59,13 @@ func main() {
 			Find(databaseConfig).Modify(modify.AddConfig("default", `"postgres"`)),
 	).Uninstall(
 		// Remove postgres connection from database.go
-		modify.GoFile(databaseConfigPath).
+		modify.WhenFileExists(databaseConfigPath, modify.GoFile(databaseConfigPath).
 			Find(databaseConfig).Modify(modify.AddConfig("default", `""`)).
 			Find(databaseConnectionsConfig).Modify(modify.RemoveConfig("postgres")).
 			Find(match.Imports()).Modify(
 			modify.RemoveImport(driverContract),
 			modify.RemoveImport(postgresFacades, "postgresfacades"),
-		),
+		)),
 
 		// Remove postgres service provider from app.go if not using bootstrap setup
 		modify.When(func(_ map[string]any) bool {
