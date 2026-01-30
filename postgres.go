@@ -7,6 +7,7 @@ import (
 	"github.com/goravel/framework/contracts/database"
 	"github.com/goravel/framework/contracts/database/driver"
 	"github.com/goravel/framework/contracts/log"
+	"github.com/goravel/framework/contracts/process"
 	"github.com/goravel/framework/contracts/testing/docker"
 	"github.com/goravel/framework/errors"
 	"github.com/goravel/postgres/contracts"
@@ -17,24 +18,30 @@ import (
 var _ driver.Driver = &Postgres{}
 
 type Postgres struct {
-	config contracts.ConfigBuilder
-	log    log.Log
+	config  contracts.ConfigBuilder
+	log     log.Log
+	process process.Process
 }
 
-func NewPostgres(config config.Config, log log.Log, connection string) *Postgres {
+func NewPostgres(config config.Config, log log.Log, process process.Process, connection string) *Postgres {
 	return &Postgres{
-		config: NewConfig(config, connection),
-		log:    log,
+		config:  NewConfig(config, connection),
+		log:     log,
+		process: process,
 	}
 }
 
 func (r *Postgres) Docker() (docker.DatabaseDriver, error) {
+	if r.process == nil {
+		return nil, errors.ProcessFacadeNotSet.SetModule(Name)
+	}
+
 	writers := r.config.Writers()
 	if len(writers) == 0 {
 		return nil, errors.DatabaseConfigNotFound
 	}
 
-	return NewDocker(r.config, writers[0].Database, writers[0].Username, writers[0].Password), nil
+	return NewDocker(r.config, r.process, writers[0].Database, writers[0].Username, writers[0].Password), nil
 }
 
 func (r *Postgres) Grammar() driver.Grammar {
