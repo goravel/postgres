@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	contractsprocess "github.com/goravel/framework/contracts/process"
 	contractsdocker "github.com/goravel/framework/contracts/testing/docker"
 	"github.com/goravel/framework/support/color"
 	supportdocker "github.com/goravel/framework/support/docker"
@@ -20,9 +21,10 @@ type Docker struct {
 	config         contracts.ConfigBuilder
 	databaseConfig contractsdocker.DatabaseConfig
 	imageDriver    contractsdocker.ImageDriver
+	process        contractsprocess.Process
 }
 
-func NewDocker(config contracts.ConfigBuilder, database, username, password string) *Docker {
+func NewDocker(config contracts.ConfigBuilder, process contractsprocess.Process, database, username, password string) *Docker {
 	return &Docker{
 		config: config,
 		databaseConfig: contractsdocker.DatabaseConfig{
@@ -43,7 +45,8 @@ func NewDocker(config contracts.ConfigBuilder, database, username, password stri
 			},
 			ExposedPorts: []string{"5432"},
 			Args:         []string{"-c max_connections=1000"},
-		}),
+		}, process),
+		process: process,
 	}
 }
 
@@ -81,7 +84,7 @@ func (r *Docker) Database(name string) (contractsdocker.DatabaseDriver, error) {
 		}
 	}()
 
-	docker := NewDocker(r.config, name, r.databaseConfig.Username, r.databaseConfig.Password)
+	docker := NewDocker(r.config, r.process, name, r.databaseConfig.Username, r.databaseConfig.Password)
 	docker.databaseConfig.ContainerID = r.databaseConfig.ContainerID
 	docker.databaseConfig.Port = r.databaseConfig.Port
 
@@ -110,7 +113,7 @@ func (r *Docker) Fresh() error {
 }
 
 func (r *Docker) Image(image contractsdocker.Image) {
-	r.imageDriver = testingdocker.NewImageDriver(image)
+	r.imageDriver = testingdocker.NewImageDriver(image, r.process)
 }
 
 func (r *Docker) Ready() error {
