@@ -48,7 +48,7 @@ func main() {
 		// Add postgres service provider to providers.go if using bootstrap setup
 		modify.When(func(_ map[string]any) bool {
 			return env.IsBootstrapSetup()
-		}, modify.AddProviderApply(moduleImport, postgresServiceProvider)),
+		}, modify.RegisterProvider(moduleImport, postgresServiceProvider)),
 
 		// Add postgres connection to database.go
 		modify.GoFile(databaseConfigPath).Find(match.Imports()).Modify(
@@ -77,6 +77,6 @@ func main() {
 		// Remove postgres service provider from providers.go if using bootstrap setup
 		modify.When(func(_ map[string]any) bool {
 			return env.IsBootstrapSetup()
-		}, modify.RemoveProviderApply(moduleImport, postgresServiceProvider)),
+		}, modify.UnregisterProvider(moduleImport, postgresServiceProvider)),
 	).Execute()
 }
