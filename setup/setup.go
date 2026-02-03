@@ -13,11 +13,11 @@ import (
 func main() {
 	setup := packages.Setup(os.Args)
 	config := `map[string]any{
-        "host":     config.Env("DB_HOST", "127.0.0.1"),
-        "port":     config.Env("DB_PORT", 5432),
-        "database": config.Env("DB_DATABASE", "forge"),
-        "username": config.Env("DB_USERNAME", ""),
-        "password": config.Env("DB_PASSWORD", ""),
+        "host":     config.Env("DB_HOST"),
+        "port":     config.Env("DB_PORT"),
+        "database": config.Env("DB_DATABASE"),
+        "username": config.Env("DB_USERNAME"),
+        "password": config.Env("DB_PASSWORD"),
         "sslmode":  "disable",
         "singular": false,
         "prefix":   "",
@@ -25,7 +25,6 @@ func main() {
         "via": func() (driver.Driver, error) {
             return postgresfacades.Postgres("postgres")
         },
-
     }`
 
 	appConfigPath := path.Config("app.go")
