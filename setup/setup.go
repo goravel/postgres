@@ -24,7 +24,7 @@ func main() {
         "prefix":   "",
         "schema":   config.Env("DB_SCHEMA", "public"),
         "via": func() (driver.Driver, error) {
-            return postgresfacades.Postgres(` + driver + `)
+            return postgresfacades.Postgres("` + driver + `")
         },
     }`
 	appConfigPath := path.Config("app.go")
@@ -34,7 +34,6 @@ func main() {
 	driverContract := "github.com/goravel/framework/contracts/database/driver"
 	postgresFacades := "github.com/goravel/postgres/facades"
 	databaseConnectionsConfig := match.Config("database.connections")
-	databaseConfig := match.Config("database")
 
 	setup.Install(
 		// Add postgres service provider to app.go if not using bootstrap setup
@@ -61,7 +60,6 @@ func main() {
 	).Uninstall(
 		// Remove postgres connection from database.go
 		modify.WhenFileExists(databaseConfigPath, modify.GoFile(databaseConfigPath).
-			Find(databaseConfig).Modify(modify.AddConfig("default", `""`)).
 			Find(databaseConnectionsConfig).Modify(modify.RemoveConfig(driver)).
 			Find(match.Imports()).Modify(
 			modify.RemoveImport(driverContract),
