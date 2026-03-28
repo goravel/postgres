@@ -12,6 +12,7 @@ import (
 
 func main() {
 	setup := packages.Setup(os.Args)
+	driver := "postgres"
 	config := `map[string]any{
         "host":     config.Env("DB_HOST"),
         "port":     config.Env("DB_PORT"),
@@ -23,10 +24,9 @@ func main() {
         "prefix":   "",
         "schema":   config.Env("DB_SCHEMA", "public"),
         "via": func() (driver.Driver, error) {
-            return postgresfacades.Postgres("postgres")
+            return postgresfacades.Postgres(` + driver + `)
         },
     }`
-
 	appConfigPath := path.Config("app.go")
 	databaseConfigPath := path.Config("database.go")
 	moduleImport := setup.Paths().Module().Import()
@@ -53,14 +53,16 @@ func main() {
 		modify.GoFile(databaseConfigPath).Find(match.Imports()).Modify(
 			modify.AddImport(driverContract),
 			modify.AddImport(postgresFacades, "postgresfacades"),
-		).
-			Find(databaseConnectionsConfig).Modify(modify.AddConfig("postgres", config)).
-			Find(databaseConfig).Modify(modify.AddConfig("default", `"postgres"`)),
+		).Find(databaseConnectionsConfig).Modify(modify.AddConfig(driver, config)),
+
+		// Add DB_CONNECTION=postgres to .env
+		modify.WhenFileExists(path.Base(".env"), modify.Env(path.Base(".env"), "DB_CONNECTION", driver)),
+		modify.WhenFileExists(path.Base(".env.example"), modify.Env(path.Base(".env.example"), "DB_CONNECTION", driver)),
 	).Uninstall(
 		// Remove postgres connection from database.go
 		modify.WhenFileExists(databaseConfigPath, modify.GoFile(databaseConfigPath).
 			Find(databaseConfig).Modify(modify.AddConfig("default", `""`)).
-			Find(databaseConnectionsConfig).Modify(modify.RemoveConfig("postgres")).
+			Find(databaseConnectionsConfig).Modify(modify.RemoveConfig(driver)).
 			Find(match.Imports()).Modify(
 			modify.RemoveImport(driverContract),
 			modify.RemoveImport(postgresFacades, "postgresfacades"),
