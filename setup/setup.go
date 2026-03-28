@@ -29,7 +29,6 @@ func main() {
 
 	appConfigPath := path.Config("app.go")
 	databaseConfigPath := path.Config("database.go")
-	queueConfigPath := path.Config("queue.go")
 	moduleImport := setup.Paths().Module().Import()
 	postgresServiceProvider := "&postgres.ServiceProvider{}"
 	driverContract := "github.com/goravel/framework/contracts/database/driver"
@@ -57,10 +56,9 @@ func main() {
 		).Find(databaseConnectionsConfig).Modify(modify.AddConfig("postgres", config)).
 			Find(databaseConfig).Modify(modify.AddConfig("default", `"postgres"`)),
 
-		// Add postgres connection to queue.go if it contains database configuration
-		modify.WhenFileContains(queueConfigPath, "database", modify.GoFile(queueConfigPath).
-			Find(match.Config("queue.connections.database")).
-			Modify(modify.AddConfig("connection", "postgres"))),
+		// Add DB_CONNECTION=postgres to .env
+		modify.WhenFileExists(path.Base(".env"), modify.Env(path.Base(".env"), "DB_CONNECTION", "postgres")),
+		modify.WhenFileExists(path.Base(".env.example"), modify.Env(path.Base(".env.example"), "DB_CONNECTION", "postgres")),
 	).Uninstall(
 		// Remove postgres connection from database.go
 		modify.WhenFileExists(databaseConfigPath, modify.GoFile(databaseConfigPath).
