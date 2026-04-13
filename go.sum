@@ -91,8 +91,6 @@ github.com/gookit/color v1.4.2/go.mod h1:fqRyamkC1W8uxl+lxCQxOT09l/vYfZ+QeiX3rKQ
 github.com/gookit/color v1.5.0/go.mod h1:43aQb+Zerm/BWh2GnrgOQm7ffz7tvQXEKV6BFMl7wAo=
 github.com/gookit/color v1.6.0 h1:JjJXBTk1ETNyqyilJhkTXJYYigHG24TM9Xa2M1xAhRA=
 github.com/gookit/color v1.6.0/go.mod h1:9ACFc7/1IpHGBW8RwuDm/0YEnhg3dwwXpoMsmtyHfjs=
-github.com/goravel/framework v1.17.2-0.20260327080955-ff2fb75eb23c h1:ayT4S1DWWlyR3YiC2Z+2qk3qiOM2oXYbpnlE7OUtJ6g=
-github.com/goravel/framework v1.17.2-0.20260327080955-ff2fb75eb23c/go.mod h1:0T2MZXECSc74guO/SekfEIONV2asP/UU5X2mWs/kawI=
 github.com/goravel/framework v1.17.2-0.20260328015200-5bd142c2eac3 h1:gt750O5FTREU6jOOkpoukxcQvtWKJ528qzBZrZB1AJ4=
 github.com/goravel/framework v1.17.2-0.20260328015200-5bd142c2eac3/go.mod h1:0T2MZXECSc74guO/SekfEIONV2asP/UU5X2mWs/kawI=
 github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsIM=
