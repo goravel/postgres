@@ -397,7 +397,7 @@ func (r *Grammar) CompileJsonSelector(column string) string {
 func (r *Grammar) CompileJsonValues(args ...any) []any {
 	for i, arg := range args {
 		val := reflect.ValueOf(arg)
-		if val.Kind() == reflect.Ptr {
+		if val.Kind() == reflect.Pointer {
 			if val.IsNil() {
 				continue
 			}
