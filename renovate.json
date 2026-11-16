@@ -25,7 +25,7 @@
           "minor",
           "patch"
         ],
-        "automerge": true
+        "automerge": false
       }
     ],
     "ignoreDeps": []
